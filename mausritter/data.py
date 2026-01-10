@@ -5,67 +5,124 @@ Single source of truth for all character creation data.
 
 import json
 
-# Background table based on HP and Pips
+# Background table based on HP and Pips (from SRD 2.3)
 # Format: (HP, Pips) -> (Background, Item A, Item B)
 BACKGROUND_TABLE = {
-    (1, 1): ("Scavenger", "Rope", "Torch"),
-    (1, 2): ("Scavenger", "Rope", "Torch"),
-    (1, 3): ("Farmer", "Sickle", "Seed Pouch"),
-    (1, 4): ("Farmer", "Sickle", "Seed Pouch"),
-    (1, 5): ("Cook", "Pot", "Spices"),
-    (1, 6): ("Cook", "Pot", "Spices"),
-    (2, 1): ("Scavenger", "Rope", "Torch"),
-    (2, 2): ("Farmer", "Sickle", "Seed Pouch"),
-    (2, 3): ("Fisher", "Net", "Hook"),
-    (2, 4): ("Fisher", "Net", "Hook"),
-    (2, 5): ("Herbalist", "Herbs", "Bandages"),
-    (2, 6): ("Herbalist", "Herbs", "Bandages"),
-    (3, 1): ("Farmer", "Sickle", "Seed Pouch"),
-    (3, 2): ("Fisher", "Net", "Hook"),
-    (3, 3): ("Tailor", "Thread", "Needle"),
-    (3, 4): ("Tailor", "Thread", "Needle"),
-    (3, 5): ("Craftsman", "Hammer", "Nails"),
-    (3, 6): ("Craftsman", "Hammer", "Nails"),
-    (4, 1): ("Fisher", "Net", "Hook"),
-    (4, 2): ("Tailor", "Thread", "Needle"),
-    (4, 3): ("Mason", "Chisel", "Stone"),
-    (4, 4): ("Mason", "Chisel", "Stone"),
-    (4, 5): ("Merchant", "Scale", "Coin Purse"),
-    (4, 6): ("Merchant", "Scale", "Coin Purse"),
-    (5, 1): ("Tailor", "Thread", "Needle"),
-    (5, 2): ("Mason", "Chisel", "Stone"),
-    (5, 3): ("Merchant", "Scale", "Coin Purse"),
-    (5, 4): ("Scholar", "Book", "Ink & Quill"),
-    (5, 5): ("Scholar", "Book", "Ink & Quill"),
-    (5, 6): ("Scout", "Map", "Compass"),
-    (6, 1): ("Mason", "Chisel", "Stone"),
-    (6, 2): ("Merchant", "Scale", "Coin Purse"),
-    (6, 3): ("Scholar", "Book", "Ink & Quill"),
-    (6, 4): ("Scout", "Map", "Compass"),
-    (6, 5): ("Guard", "Spear", "Shield"),
-    (6, 6): ("Guard", "Spear", "Shield"),
+    (1, 1): ("Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)"),
+    (1, 2): ("Kitchen forager", "Shield & jerkin (Light armour)", "Cookpots"),
+    (1, 3): ("Cage dweller", "Spell: Be understood", "Bottle of milk"),
+    (1, 4): ("Hedge witch", "Spell: Heal", "Incense stick"),
+    (1, 5): ("Leatherworker", "Shield & jerkin (Light armour)", "Shears"),
+    (1, 6): ("Street tough", "Dagger (Light, d6)", "Flask of coffee"),
+    (2, 1): ("Mendicant priest", "Spell: Restore", "Holy symbol"),
+    (2, 2): ("Beetleherd", "Hireling: Loyal beetle", "Pole, 6\""),
+    (2, 3): ("Ale brewer", "Hireling: Drunken torchbearer", "Small barrel of ale"),
+    (2, 4): ("Fishermouse", "Net", "Needle (Light, d6)"),
+    (2, 5): ("Blacksmith", "Hammer (Medium, d6/d8)", "Metal file"),
+    (2, 6): ("Wireworker", "Wire, spool", "Electric lantern"),
+    (3, 1): ("Woodcutter", "Axe (Medium, d6/d8)", "Twine, roll"),
+    (3, 2): ("Bat cultist", "Spell: Darkness", "Bag of bat teeth"),
+    (3, 3): ("Tin miner", "Pickaxe (Medium, d6/d8)", "Lantern"),
+    (3, 4): ("Trash collector", "Trashhook (Heavy, d10)", "Mirror"),
+    (3, 5): ("Wall rover", "Fishhook", "Thread, spool"),
+    (3, 6): ("Merchant", "Hireling: Pack rat", "20p IOU from a noblemouse"),
+    (4, 1): ("Raft crew", "Hammer (Medium, d6/d8)", "Wooden spikes"),
+    (4, 2): ("Worm wrangler", "Pole, 6\"", "Soap"),
+    (4, 3): ("Sparrow rider", "Fishhook", "Goggles"),
+    (4, 4): ("Sewer guide", "Metal file", "Thread, spool"),
+    (4, 5): ("Prison guard", "Chain, 6\"", "Spear (Heavy, d10)"),
+    (4, 6): ("Fungus farmer", "Dried mushroom (as rations)", "Spore mask"),
+    (5, 1): ("Dam builder", "Shovel", "Wooden spikes"),
+    (5, 2): ("Cartographer", "Quill & ink", "Compass"),
+    (5, 3): ("Trap thief", "Block of cheese", "Glue"),
+    (5, 4): ("Vagabond", "Tent", "Treasure map, dubious"),
+    (5, 5): ("Grain farmer", "Spear (Heavy, d10)", "Whistle"),
+    (5, 6): ("Message runner", "Bedroll", "Documents, sealed"),
+    (6, 1): ("Troubadour", "Musical instrument", "Disguise kit"),
+    (6, 2): ("Gambler", "Set of loaded dice", "Mirror"),
+    (6, 3): ("Sap tapper", "Bucket", "Wooden spikes"),
+    (6, 4): ("Bee keeper", "Jar of honey", "Net"),
+    (6, 5): ("Librarian", "Scrap of obscure book", "Quill & ink"),
+    (6, 6): ("Pauper noblemouse", "Felt hat", "Perfume"),
 }
 
-BIRTHMARKS = [
-    "Star-shaped", "Crescent moon", "Circle", "Triangle", "Line", "Dot",
-    "Heart-shaped", "Diamond", "Cross", "Spiral", "Arrow", "Leaf"
+# Birthsign table (from SRD 2.3)
+# Format: (Sign, Disposition)
+BIRTHSIGNS = [
+    ("Star", "Brave / Reckless"),
+    ("Wheel", "Industrious / Unimaginative"),
+    ("Acorn", "Inquisitive / Stubborn"),
+    ("Storm", "Generous / Wrathful"),
+    ("Moon", "Wise / Mysterious"),
+    ("Mother", "Nurturing / Worrying"),
 ]
 
-FUR_COLORS = [
-    "Brown", "Gray", "Black", "White", "Tan", "Cream",
-    "Golden", "Silver", "Rust", "Charcoal", "Beige", "Cinnamon"
+# Coat colors (from SRD 2.3)
+COAT_COLORS = [
+    "Chocolate",
+    "Black",
+    "White",
+    "Tan",
+    "Grey",
+    "Blue",
 ]
 
-FUR_PATTERNS = [
-    "Solid", "Spotted", "Striped", "Patched", "Brindled", "Ticked",
-    "Banded", "Mottled", "Piebald", "Sable", "Agouti", "Roan"
+# Coat patterns (from SRD 2.3)
+COAT_PATTERNS = [
+    "Solid",
+    "Brindle",
+    "Patchy",
+    "Banded",
+    "Marbled",
+    "Flecked",
 ]
 
-SPECIAL_FEATURES = [
-    "Eye patch", "Scar", "Missing ear tip", "Notched ear", "White paw",
-    "Crooked tail", "Long whiskers", "Short whiskers", "One white eye",
-    "Tattoo", "Jewelry", "Distinctive gait"
-]
+# Physical details d66 table (from SRD 2.3)
+# Indexed by d66 roll (11-66)
+PHYSICAL_DETAILS = {
+    # Body (11-16)
+    11: "Scarred body",
+    12: "Corpulent body",
+    13: "Skeletal body",
+    14: "Willowy body",
+    15: "Tiny body",
+    16: "Massive body",
+    # Clothes (21-26)
+    21: "War paint",
+    22: "Foreign clothes",
+    23: "Elegant clothes",
+    24: "Patched clothes",
+    25: "Fashionable clothes",
+    26: "Unwashed clothes",
+    # Face/Ear (31-36)
+    31: "Missing ear",
+    32: "Lumpy face",
+    33: "Beautiful face",
+    34: "Round face",
+    35: "Delicate face",
+    36: "Elongated face",
+    # Fur (41-46)
+    41: "Groomed fur",
+    42: "Dreadlocks",
+    43: "Dyed fur",
+    44: "Shaved fur",
+    45: "Frizzy fur",
+    46: "Silky fur",
+    # Eyes (51-56)
+    51: "Night black eyes",
+    52: "Eye patch",
+    53: "Blood red eyes",
+    54: "Wise eyes",
+    55: "Sharp eyes",
+    56: "Luminous eyes",
+    # Tail (61-66)
+    61: "Cropped tail",
+    62: "Whip-like tail",
+    63: "Tufted tail",
+    64: "Stubby tail",
+    65: "Prehensile tail",
+    66: "Curly tail",
+}
 
 FIRST_NAMES = [
     "Acorn", "Bramble", "Chestnut", "Daisy", "Elder", "Fern", "Ginger",
@@ -82,10 +139,27 @@ LAST_NAMES = [
     "Berry", "Nut", "Acorn", "Chestnut", "Hazel", "Oak", "Maple", "Willow"
 ]
 
-WEAPONS = [
-    "Dagger", "Shortsword", "Spear", "Bow", "Sling", "Club", "Rapier",
-    "Sword", "Axe", "Mace", "Staff", "Knife", "Sickle", "Hammer"
-]
+# Weapons by category (from SRD 2.3)
+# Format: (Name, Damage, Slots, Special)
+WEAPONS = {
+    "light": [
+        ("Needle", "d6", 1, "If dual-wielding, roll both dice and use best"),
+        ("Dagger", "d6", 1, "If dual-wielding, roll both dice and use best"),
+        ("Hatchet", "d6", 1, "If dual-wielding, roll both dice and use best"),
+    ],
+    "medium": [
+        ("Sword", "d6/d8", 1, "d6 one-handed, d8 two-handed"),
+        ("Axe", "d6/d8", 1, "d6 one-handed, d8 two-handed"),
+        ("Staff", "d6/d8", 1, "d6 one-handed, d8 two-handed"),
+        ("Hammer", "d6/d8", 1, "d6 one-handed, d8 two-handed"),
+        ("Pickaxe", "d6/d8", 1, "d6 one-handed, d8 two-handed"),
+    ],
+    "heavy": [
+        ("Trashhook", "d10", 2, "Requires both paws"),
+        ("Spear", "d10", 2, "Requires both paws"),
+        ("Heavy hammer", "d10", 2, "Requires both paws"),
+    ],
+}
 
 
 def get_background_table_as_json() -> str:
@@ -100,10 +174,10 @@ def get_all_data_as_json() -> dict:
     """Return all game data as a dictionary for JSON serialization."""
     return {
         "BACKGROUND_TABLE": {f"{hp},{pips}": list(val) for (hp, pips), val in BACKGROUND_TABLE.items()},
-        "BIRTHMARKS": BIRTHMARKS,
-        "FUR_COLORS": FUR_COLORS,
-        "FUR_PATTERNS": FUR_PATTERNS,
-        "SPECIAL_FEATURES": SPECIAL_FEATURES,
+        "BIRTHSIGNS": BIRTHSIGNS,
+        "COAT_COLORS": COAT_COLORS,
+        "COAT_PATTERNS": COAT_PATTERNS,
+        "PHYSICAL_DETAILS": PHYSICAL_DETAILS,
         "FIRST_NAMES": FIRST_NAMES,
         "LAST_NAMES": LAST_NAMES,
         "WEAPONS": WEAPONS,

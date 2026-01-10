@@ -3,7 +3,10 @@
     "allow": [
       "Bash(python main.py:*)",
       "Bash(git rm:*)",
-      "Bash(git add:*)"
+      "Bash(git add:*)",
+      "Bash(git push:*)",
+      "Bash(python -m pytest tests/ -v)",
+      "Bash(python3:*)"
     ]
   }
 }

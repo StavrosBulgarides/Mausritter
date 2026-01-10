@@ -11,10 +11,10 @@ from mausritter.generator import (
 )
 from mausritter.data import (
     BACKGROUND_TABLE,
-    BIRTHMARKS,
-    FUR_COLORS,
-    FUR_PATTERNS,
-    SPECIAL_FEATURES,
+    BIRTHSIGNS,
+    COAT_COLORS,
+    COAT_PATTERNS,
+    PHYSICAL_DETAILS,
     FIRST_NAMES,
     LAST_NAMES,
     WEAPONS,
@@ -83,11 +83,11 @@ class TestGetBackground:
 
     def test_valid_lookup(self):
         """Should return correct background for known HP/Pips combinations."""
-        # Test a few known combinations from the table
-        assert get_background(1, 1) == ("Scavenger", "Rope", "Torch")
-        assert get_background(1, 5) == ("Cook", "Pot", "Spices")
-        assert get_background(3, 3) == ("Tailor", "Thread", "Needle")
-        assert get_background(6, 6) == ("Guard", "Spear", "Shield")
+        # Test a few known combinations from the table (SRD 2.3)
+        assert get_background(1, 1) == ("Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)")
+        assert get_background(1, 5) == ("Leatherworker", "Shield & jerkin (Light armour)", "Shears")
+        assert get_background(3, 3) == ("Tin miner", "Pickaxe (Medium, d6/d8)", "Lantern")
+        assert get_background(6, 6) == ("Pauper noblemouse", "Felt hat", "Perfume")
 
     def test_all_table_entries(self):
         """All entries in the background table should be retrievable."""
@@ -97,9 +97,9 @@ class TestGetBackground:
 
     def test_fallback_for_invalid_values(self):
         """Should return fallback background for invalid HP/Pips."""
-        assert get_background(0, 0) == ("Scavenger", "Rope", "Torch")
-        assert get_background(7, 7) == ("Scavenger", "Rope", "Torch")
-        assert get_background(-1, 3) == ("Scavenger", "Rope", "Torch")
+        assert get_background(0, 0) == ("Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)")
+        assert get_background(7, 7) == ("Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)")
+        assert get_background(-1, 3) == ("Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)")
 
     def test_returns_tuple_of_three_strings(self):
         """Should return a tuple of (background, item_a, item_b)."""
@@ -164,8 +164,16 @@ class TestGenerateCharacter:
         """Equipment should contain a valid weapon."""
         character = generate_character()
         weapon = character["weapon"]
-        assert weapon in WEAPONS
+        # Weapon is now formatted as "Name (Category, Damage)"
         assert weapon in character["equipment"]
+        # Verify it's a valid weapon from the WEAPONS dict
+        all_weapon_names = []
+        for category in WEAPONS.values():
+            for weapon_tuple in category:
+                all_weapon_names.append(weapon_tuple[0])
+        # Extract weapon name from the formatted string
+        weapon_name = weapon.split(" (")[0]
+        assert weapon_name in all_weapon_names
 
     def test_equipment_minimum_items(self):
         """Equipment should have at least 5 items (basics + weapon + 2 background items)."""
@@ -177,15 +185,18 @@ class TestGenerateCharacter:
         character = generate_character()
         appearance = character["appearance"]
 
-        assert "birthmark" in appearance
-        assert "fur_color" in appearance
-        assert "fur_pattern" in appearance
-        assert "special_feature" in appearance
+        assert "birthsign" in appearance
+        assert "disposition" in appearance
+        assert "coat_color" in appearance
+        assert "coat_pattern" in appearance
+        assert "physical_detail" in appearance
 
-        assert appearance["birthmark"] in BIRTHMARKS
-        assert appearance["fur_color"] in FUR_COLORS
-        assert appearance["fur_pattern"] in FUR_PATTERNS
-        assert appearance["special_feature"] in SPECIAL_FEATURES
+        # Verify birthsign and disposition match
+        valid_birthsigns = [(sign, disp) for sign, disp in BIRTHSIGNS]
+        assert (appearance["birthsign"], appearance["disposition"]) in valid_birthsigns
+        assert appearance["coat_color"] in COAT_COLORS
+        assert appearance["coat_pattern"] in COAT_PATTERNS
+        assert appearance["physical_detail"] in PHYSICAL_DETAILS.values()
 
     def test_notes_and_conditions_initialized(self):
         """Notes should be empty string, conditions should be empty list."""

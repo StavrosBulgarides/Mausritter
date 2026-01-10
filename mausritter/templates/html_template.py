@@ -86,20 +86,20 @@ def _build_appearance_section(appearance: Dict[str, str]) -> str:
             <div class="section-title">Appearance</div>
             <div class="appearance-grid">
                 <div class="appearance-item">
-                    <div class="appearance-label">Birthmark</div>
-                    <input type="text" value="{appearance['birthmark']}" />
+                    <div class="appearance-label">Birthsign</div>
+                    <input type="text" value="{appearance['birthsign']}" />
                 </div>
                 <div class="appearance-item">
-                    <div class="appearance-label">Fur Color</div>
-                    <input type="text" value="{appearance['fur_color']}" />
+                    <div class="appearance-label">Coat Color</div>
+                    <input type="text" value="{appearance['coat_color']}" />
                 </div>
                 <div class="appearance-item">
-                    <div class="appearance-label">Fur Pattern</div>
-                    <input type="text" value="{appearance['fur_pattern']}" />
+                    <div class="appearance-label">Coat Pattern</div>
+                    <input type="text" value="{appearance['coat_pattern']}" />
                 </div>
                 <div class="appearance-item">
-                    <div class="appearance-label">Special Feature</div>
-                    <input type="text" value="{appearance['special_feature']}" />
+                    <div class="appearance-label">Physical Detail</div>
+                    <input type="text" value="{appearance['physical_detail']}" />
                 </div>
             </div>
         </div>"""

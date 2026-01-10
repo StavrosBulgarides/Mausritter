@@ -9,12 +9,12 @@ def get_javascript_code() -> str:
     data = get_all_data_as_json()
 
     return f"""
-        // Game data (single source of truth from Python)
+        // Game data (single source of truth from Python - SRD 2.3)
         const BACKGROUND_TABLE = {json.dumps(data["BACKGROUND_TABLE"])};
-        const BIRTHMARKS = {json.dumps(data["BIRTHMARKS"])};
-        const FUR_COLORS = {json.dumps(data["FUR_COLORS"])};
-        const FUR_PATTERNS = {json.dumps(data["FUR_PATTERNS"])};
-        const SPECIAL_FEATURES = {json.dumps(data["SPECIAL_FEATURES"])};
+        const BIRTHSIGNS = {json.dumps(data["BIRTHSIGNS"])};
+        const COAT_COLORS = {json.dumps(data["COAT_COLORS"])};
+        const COAT_PATTERNS = {json.dumps(data["COAT_PATTERNS"])};
+        const PHYSICAL_DETAILS = {json.dumps(data["PHYSICAL_DETAILS"])};
         const FIRST_NAMES = {json.dumps(data["FIRST_NAMES"])};
         const LAST_NAMES = {json.dumps(data["LAST_NAMES"])};
         const WEAPONS = {json.dumps(data["WEAPONS"])};
@@ -33,7 +33,24 @@ def get_javascript_code() -> str:
 
         function getBackground(hp, pips) {{
             const key = hp + ',' + pips;
-            return BACKGROUND_TABLE[key] || ["Scavenger", "Rope", "Torch"];
+            return BACKGROUND_TABLE[key] || ["Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)"];
+        }}
+
+        function rollD66() {{
+            // Roll d66: first d6 is tens digit, second is ones digit
+            const tens = Math.floor(Math.random() * 6) + 1;
+            const ones = Math.floor(Math.random() * 6) + 1;
+            return tens * 10 + ones;
+        }}
+
+        function getRandomWeapon() {{
+            // Get random weapon category, then random weapon from that category
+            const categories = Object.keys(WEAPONS);
+            const category = categories[Math.floor(Math.random() * categories.length)];
+            const weapons = WEAPONS[category];
+            const weapon = weapons[Math.floor(Math.random() * weapons.length)];
+            // Format: "Name (Category, Damage)"
+            return weapon[0] + ' (' + category.charAt(0).toUpperCase() + category.slice(1) + ', ' + weapon[1] + ')';
         }}
 
         function generateNewCharacter() {{
@@ -56,7 +73,7 @@ def get_javascript_code() -> str:
 
                 // Determine additional equipment
                 const highestAttr = Math.max(str, dex, wil);
-                const equipment = ["Torches", "Rations", randomChoice(WEAPONS), itemA, itemB];
+                const equipment = ["Torches", "Rations", getRandomWeapon(), itemA, itemB];
 
                 if (highestAttr <= 9) {{
                     const addHp = Math.floor(Math.random() * 6) + 1;
@@ -69,10 +86,13 @@ def get_javascript_code() -> str:
                 }}
 
                 // Generate appearance
-                const birthmark = randomChoice(BIRTHMARKS);
-                const furColor = randomChoice(FUR_COLORS);
-                const furPattern = randomChoice(FUR_PATTERNS);
-                const specialFeature = randomChoice(SPECIAL_FEATURES);
+                const birthsignData = randomChoice(BIRTHSIGNS);
+                const birthsign = birthsignData[0];
+                const disposition = birthsignData[1];
+                const coatColor = randomChoice(COAT_COLORS);
+                const coatPattern = randomChoice(COAT_PATTERNS);
+                const detailRoll = rollD66();
+                const physicalDetail = PHYSICAL_DETAILS[detailRoll.toString()];
 
                 // Generate name
                 const firstName = randomChoice(FIRST_NAMES);
@@ -122,11 +142,18 @@ def get_javascript_code() -> str:
 
                 // Update appearance
                 const appearanceInputs = document.querySelectorAll('.appearance-item input[type="text"]');
-                if (appearanceInputs.length >= 4) {{
-                    appearanceInputs[0].value = birthmark;
-                    appearanceInputs[1].value = furColor;
-                    appearanceInputs[2].value = furPattern;
-                    appearanceInputs[3].value = specialFeature;
+                if (appearanceInputs.length >= 5) {{
+                    appearanceInputs[0].value = birthsign;
+                    appearanceInputs[1].value = disposition;
+                    appearanceInputs[2].value = coatColor;
+                    appearanceInputs[3].value = coatPattern;
+                    appearanceInputs[4].value = physicalDetail;
+                }} else if (appearanceInputs.length >= 4) {{
+                    // Legacy 4-field format
+                    appearanceInputs[0].value = birthsign + ' (' + disposition + ')';
+                    appearanceInputs[1].value = coatColor;
+                    appearanceInputs[2].value = coatPattern;
+                    appearanceInputs[3].value = physicalDetail;
                 }} else {{
                     console.error('Could not find appearance inputs');
                 }}

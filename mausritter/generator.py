@@ -7,10 +7,10 @@ from typing import Dict, Any, Tuple
 
 from .data import (
     BACKGROUND_TABLE,
-    BIRTHMARKS,
-    FUR_COLORS,
-    FUR_PATTERNS,
-    SPECIAL_FEATURES,
+    BIRTHSIGNS,
+    COAT_COLORS,
+    COAT_PATTERNS,
+    PHYSICAL_DETAILS,
     FIRST_NAMES,
     LAST_NAMES,
     WEAPONS,
@@ -35,7 +35,7 @@ def get_background(hp: int, pips: int) -> Tuple[str, str, str]:
     """Get background based on HP and Pips."""
     if (hp, pips) in BACKGROUND_TABLE:
         return BACKGROUND_TABLE[(hp, pips)]
-    return ("Scavenger", "Rope", "Torch")
+    return ("Test subject", "Spell: Magic missile", "Lead coat (Heavy armour)")
 
 
 def generate_character() -> Dict[str, Any]:
@@ -58,18 +58,22 @@ def generate_character() -> Dict[str, Any]:
             additional_items.append(add_item_b)
 
     # Generate appearance
-    birthmark = random.choice(BIRTHMARKS)
-    fur_color = random.choice(FUR_COLORS)
-    fur_pattern = random.choice(FUR_PATTERNS)
-    special_feature = random.choice(SPECIAL_FEATURES)
+    birthsign, disposition = random.choice(BIRTHSIGNS)
+    coat_color = random.choice(COAT_COLORS)
+    coat_pattern = random.choice(COAT_PATTERNS)
+    # Roll d66 for physical detail (two d6s: first is tens, second is ones)
+    detail_roll = random.randint(1, 6) * 10 + random.randint(1, 6)
+    physical_detail = PHYSICAL_DETAILS[detail_roll]
 
     # Generate name
     first_name = random.choice(FIRST_NAMES)
     last_name = random.choice(LAST_NAMES)
     name = f"{first_name} {last_name}"
 
-    # Select weapon
-    weapon = random.choice(WEAPONS)
+    # Select weapon (random category, then random weapon from that category)
+    category = random.choice(list(WEAPONS.keys()))
+    weapon_data = random.choice(WEAPONS[category])
+    weapon = f"{weapon_data[0]} ({category.capitalize()}, {weapon_data[1]})"
 
     # Starting equipment
     equipment = ["Torches", "Rations", weapon, item_a, item_b]
@@ -83,10 +87,11 @@ def generate_character() -> Dict[str, Any]:
         "background": background,
         "equipment": equipment,
         "appearance": {
-            "birthmark": birthmark,
-            "fur_color": fur_color,
-            "fur_pattern": fur_pattern,
-            "special_feature": special_feature,
+            "birthsign": birthsign,
+            "disposition": disposition,
+            "coat_color": coat_color,
+            "coat_pattern": coat_pattern,
+            "physical_detail": physical_detail,
         },
         "weapon": weapon,
         "notes": "",

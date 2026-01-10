@@ -1,0 +1,103 @@
+Missing Character Data from Mausritter SRD 2.3
+==============================================
+
+This file lists character-related data from the SRD that is NOT currently
+included in the character generator output.
+
+RULES DIFFERENCES
+-----------------
+1. Attribute Generation
+   - SRD: Roll 3d6, keep the TWO HIGHEST dice (range 2-12)
+   - Generator: Currently sums all 3d6 (range 3-18)
+
+2. Attribute Swap
+   - SRD: "You may then swap any two attributes"
+   - Generator: Does not offer this option
+
+MISSING EQUIPMENT DATA
+----------------------
+1. Ranged Weapons (not in weapon selection)
+   - Sling: d4 damage, 1 slot, can attack while moving
+   - Bow: d6 damage, 1 slot, both paws, cannot move and attack same turn
+
+2. Improvised Weapons
+   - d6 damage, wielded in main paw or both paws
+   - Special: Always mark usage after a fight
+
+3. Armour (not tracked)
+   - Light armour: 1 Armour, shield & jerkin, 20p
+   - Heavy armour: 2 Armour, chain or plate, 200p
+   - Note: Some backgrounds provide armour as starting items
+
+4. Item Usage Dots
+   - Most items have 3 usage dots (not currently tracked)
+   - Depleted when all 3 dots are marked
+
+SPELL DETAILS
+-------------
+Some backgrounds provide spells, but spell mechanics are not included:
+- Magic Missile, Be Understood, Heal, Restore, Darkness
+- Spell casting rules, spell dice, mishaps, dooms
+
+HIRELING DETAILS
+----------------
+Some backgrounds provide hirelings (not fully represented):
+- Loyal beetle (Beetleherd background)
+- Drunken torchbearer (Ale brewer background)
+- Pack rat (Merchant background)
+
+Hireling stats and rules are in SRD section "Hirelings"
+
+CONDITIONS SYSTEM
+-----------------
+Conditions occupy inventory slots and have specific effects/clear requirements:
+
+| Condition   | Effect                           | Clear                      |
+|-------------|----------------------------------|----------------------------|
+| Exhausted   | No running, disadvantage on DEX  | Long rest                  |
+| Frightened  | Disadvantage on WIL saves        | Safe rest                  |
+| Hungry      | No HP recovery from rest         | Eat a meal                 |
+| Injured     | Max HP reduced                   | Full rest + medical aid    |
+| Poisoned    | Disadvantage on all saves        | Antidote or time           |
+
+NPC-SPECIFIC DATA (for GMs)
+---------------------------
+These tables are for NPCs, not player character generation:
+
+1. NPC Appearance (d20 table)
+   - Soulful eyes, Bright patched clothes, Wreath of daisies, etc.
+
+2. NPC Quirk (d20 table)
+   - Constantly grooming, Obsessed with weather, Very high energy, etc.
+
+3. NPC Wants (d20 table)
+   - Freedom, Safety, Escape, Excitement, Power, etc.
+
+4. NPC Relationship (d20 table)
+   - Parent, Sibling, Cousin, Married, Former lovers, etc.
+
+5. NPC Social Position / Starting Wealth
+   - Peasant: d6p
+   - Tradesmouse: d6 x 10p
+   - Guildmouse: d4 x 100p
+   - Noblemouse: d4 x 1000p
+
+INVENTORY SYSTEM
+----------------
+Not fully represented in generator output:
+- Paw slots (2): Items carried in paws
+- Body slots (2): Worn items, quick access
+- Pack slots (6): Stored items, action to retrieve in combat
+- Encumbrance rules when carrying more than slots allow
+
+ADDITIONAL GAME DATA
+--------------------
+These are game mechanics not related to character creation:
+- Warband rules
+- Settlement creation
+- Hexcrawl procedures
+- Creature/monster stats
+- Treasure tables
+- Magic item creation
+- Weather effects
+- Faction rules
