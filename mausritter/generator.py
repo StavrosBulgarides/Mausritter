@@ -22,6 +22,16 @@ def roll_dice(num_dice: int, sides: int) -> int:
     return sum(random.randint(1, sides) for _ in range(num_dice))
 
 
+def roll_attribute() -> int:
+    """Roll 3d6 and keep the two highest dice (per SRD 2.3 rules).
+
+    Returns a value between 2-12.
+    """
+    rolls = [random.randint(1, 6) for _ in range(3)]
+    rolls.sort(reverse=True)
+    return rolls[0] + rolls[1]  # Keep two highest
+
+
 def format_item_text(item: str) -> str:
     """Format item text so bracketed content appears on a new line."""
     if "(" in item and ")" in item:
@@ -34,11 +44,15 @@ def format_item_text(item: str) -> str:
 
 
 def generate_attributes() -> Dict[str, int]:
-    """Generate STR, DEX, and WIL attributes by rolling 3d6 each."""
+    """Generate STR, DEX, and WIL attributes.
+
+    Per SRD 2.3: Roll 3d6 for each, keep the two highest dice.
+    This gives a range of 2-12 for each attribute.
+    """
     return {
-        "STR": roll_dice(3, 6),
-        "DEX": roll_dice(3, 6),
-        "WIL": roll_dice(3, 6),
+        "STR": roll_attribute(),
+        "DEX": roll_attribute(),
+        "WIL": roll_attribute(),
     }
 
 

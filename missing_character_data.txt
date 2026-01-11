@@ -2,54 +2,65 @@ Missing Character Data from Mausritter SRD 2.3
 ==============================================
 
 This file lists character-related data from the SRD that is NOT currently
-included in the character generator output.
+included in the character generator, or where the implementation differs
+from the official rules.
+
+Last updated: 2026-01-11
 
 RULES DIFFERENCES
 -----------------
-1. Attribute Generation
-   - SRD: Roll 3d6, keep the TWO HIGHEST dice (range 2-12)
-   - Generator: Currently sums all 3d6 (range 3-18)
-
-2. Attribute Swap
+1. Attribute Swap (NOT IMPLEMENTED)
    - SRD: "You may then swap any two attributes"
    - Generator: Does not offer this option
+   - This is a player choice that could be offered via the HTML interface
 
-MISSING EQUIPMENT DATA
-----------------------
+2. Weapon Selection (DIFFERS FROM RULES)
+   - SRD: "A weapon of your choice" - player should CHOOSE their weapon
+   - Generator: Randomly selects a weapon from available categories
+   - Could add a weapon selector to the HTML interface
+
+MISSING WEAPON DATA
+-------------------
 1. Ranged Weapons (not in weapon selection)
-   - Sling: d4 damage, 1 slot, can attack while moving
-   - Bow: d6 damage, 1 slot, both paws, cannot move and attack same turn
+   - Light ranged: d6 damage, main paw (Sling, light crossbow) - Cost: 10p
+   - Heavy ranged: d8 damage, both paws (Bow, heavy crossbow) - Cost: 40p
 
-2. Improvised Weapons
+2. Ammunition (not tracked)
+   - Stones, pouch: Carried in body slot - Cost: 1p
+   - Arrows, quiver: Carried in body slot - Cost: 5p
+
+3. Improvised Weapons (not in selection)
    - d6 damage, wielded in main paw or both paws
    - Special: Always mark usage after a fight
 
-3. Armour (not tracked)
-   - Light armour: 1 Armour, shield & jerkin, 20p
-   - Heavy armour: 2 Armour, chain or plate, 200p
-   - Note: Some backgrounds provide armour as starting items
+ITEM USAGE SYSTEM (NOT IMPLEMENTED)
+-----------------------------------
+Most items have three usage dots that are not currently tracked:
+- Weapons/armour/ammunition: After a fight, roll d6. On 4-6, mark usage.
+- Torches/lanterns: Mark usage every 6 Turns.
+- Rations: Mark usage for each meal.
+- Other items: Mark usage when specifically used.
+- When all 3 dots marked, item is depleted/destroyed.
+- Usage dots can be cleared from weapons/armour for 10% of original cost per dot.
 
-4. Item Usage Dots
-   - Most items have 3 usage dots (not currently tracked)
-   - Depleted when all 3 dots are marked
-
-SPELL DETAILS
--------------
+SPELL DETAILS (NOT IMPLEMENTED)
+-------------------------------
 Some backgrounds provide spells, but spell mechanics are not included:
-- Magic Missile, Be Understood, Heal, Restore, Darkness
-- Spell casting rules, spell dice, mishaps, dooms
+- Spells provided: Magic Missile, Be Understood, Heal, Restore, Darkness
+- Not implemented: Spell casting rules, spell dice, mishaps, dooms
+- Spell recharge mechanics not shown
 
-HIRELING DETAILS
-----------------
-Some backgrounds provide hirelings (not fully represented):
+HIRELING DETAILS (PARTIALLY REPRESENTED)
+----------------------------------------
+Some backgrounds provide hirelings (shown as text only):
 - Loyal beetle (Beetleherd background)
 - Drunken torchbearer (Ale brewer background)
 - Pack rat (Merchant background)
 
-Hireling stats and rules are in SRD section "Hirelings"
+Hireling stats, loyalty, and rules from SRD "Hirelings" section not included.
 
-CONDITIONS SYSTEM
------------------
+CONDITIONS SYSTEM (NOT IMPLEMENTED)
+-----------------------------------
 Conditions occupy inventory slots and have specific effects/clear requirements:
 
 | Condition   | Effect                           | Clear                      |
@@ -60,8 +71,23 @@ Conditions occupy inventory slots and have specific effects/clear requirements:
 | Injured     | Max HP reduced                   | Full rest + medical aid    |
 | Poisoned    | Disadvantage on all saves        | Antidote or time           |
 
-NPC-SPECIFIC DATA (for GMs)
----------------------------
+IMPLEMENTED FEATURES
+--------------------
+The following features ARE now implemented:
+- Attribute generation: Roll 3d6, keep two highest (range 2-12 per SRD 2.3)
+- Structured inventory (Paw slots, Body slots, Pack slots)
+- Max/Current tracking for attributes and HP
+- Level, XP, Grit fields
+- Pips with total tracking
+- Birthsign with disposition
+- Coat (color + pattern combined)
+- Physical detail (d66 table)
+- Background items placed appropriately (armor to body, others to pack)
+- Generate New Character button with JavaScript
+- Current values enforced to not exceed max values
+
+NPC-SPECIFIC DATA (for GMs, not player characters)
+--------------------------------------------------
 These tables are for NPCs, not player character generation:
 
 1. NPC Appearance (d20 table)
@@ -82,16 +108,8 @@ These tables are for NPCs, not player character generation:
    - Guildmouse: d4 x 100p
    - Noblemouse: d4 x 1000p
 
-INVENTORY SYSTEM
-----------------
-Not fully represented in generator output:
-- Paw slots (2): Items carried in paws
-- Body slots (2): Worn items, quick access
-- Pack slots (6): Stored items, action to retrieve in combat
-- Encumbrance rules when carrying more than slots allow
-
-ADDITIONAL GAME DATA
---------------------
+ADDITIONAL GAME DATA (not character creation)
+---------------------------------------------
 These are game mechanics not related to character creation:
 - Warband rules
 - Settlement creation
@@ -101,3 +119,4 @@ These are game mechanics not related to character creation:
 - Magic item creation
 - Weather effects
 - Faction rules
+- Advancement/leveling procedures

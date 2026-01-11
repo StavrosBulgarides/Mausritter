@@ -84,18 +84,18 @@ def _build_middle_section(character: Dict[str, Any]) -> str:
                 <div class="attributes-table">
                     <div class="attribute-row">
                         <span class="attribute-label">STR</span>
-                        <input type="number" value="{attrs['STR']['max']}" min="1" max="18" />
-                        <input type="number" value="{attrs['STR']['current']}" min="0" max="18" />
+                        <input type="number" value="{attrs['STR']['max']}" min="1" max="12" />
+                        <input type="number" value="{attrs['STR']['current']}" min="0" max="12" />
                     </div>
                     <div class="attribute-row">
                         <span class="attribute-label">DEX</span>
-                        <input type="number" value="{attrs['DEX']['max']}" min="1" max="18" />
-                        <input type="number" value="{attrs['DEX']['current']}" min="0" max="18" />
+                        <input type="number" value="{attrs['DEX']['max']}" min="1" max="12" />
+                        <input type="number" value="{attrs['DEX']['current']}" min="0" max="12" />
                     </div>
                     <div class="attribute-row">
                         <span class="attribute-label">WIL</span>
-                        <input type="number" value="{attrs['WIL']['max']}" min="1" max="18" />
-                        <input type="number" value="{attrs['WIL']['current']}" min="0" max="18" />
+                        <input type="number" value="{attrs['WIL']['max']}" min="1" max="12" />
+                        <input type="number" value="{attrs['WIL']['current']}" min="0" max="12" />
                     </div>
                 </div>
             </div>

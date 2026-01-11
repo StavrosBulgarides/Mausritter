@@ -27,6 +27,18 @@ def get_javascript_code() -> str:
             return total;
         }}
 
+        function rollAttribute() {{
+            // Roll 3d6 and keep the two highest dice (per SRD 2.3)
+            // Returns a value between 2-12
+            const rolls = [
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1,
+                Math.floor(Math.random() * 6) + 1
+            ];
+            rolls.sort((a, b) => b - a);  // Sort descending
+            return rolls[0] + rolls[1];   // Keep two highest
+        }}
+
         function randomChoice(array) {{
             return array[Math.floor(Math.random() * array.length)];
         }}
@@ -59,10 +71,10 @@ def get_javascript_code() -> str:
                     return;
                 }}
 
-                // Roll attributes
-                const str = rollDiceSum(3, 6);
-                const dex = rollDiceSum(3, 6);
-                const wil = rollDiceSum(3, 6);
+                // Roll attributes (3d6 keep two highest, per SRD 2.3)
+                const str = rollAttribute();
+                const dex = rollAttribute();
+                const wil = rollAttribute();
 
                 // Roll HP and Pips
                 const hp = Math.floor(Math.random() * 6) + 1;
