@@ -116,10 +116,9 @@ def _build_middle_section(character: Dict[str, Any]) -> str:
             <div class="pips-section">
                 <div class="pips-table">
                     <div class="pips-row">
-                        <span class="pips-icon">🐭</span>
                         <span class="pips-label">Pips</span>
-                        <input type="number" value="{pips}" min="0" class="pips-input" />
-                        <span class="pips-total">/ <input type="number" value="{pips_total}" min="0" class="pips-total-input" /></span>
+                        <input type="number" value="{pips}" min="0" />
+                        <input type="number" value="{pips_total}" min="0" />
                     </div>
                 </div>
             </div>
@@ -141,77 +140,147 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
             <span class="inventory-title">Inventory</span>
         </div>
         <div class="inventory-container">
-            <div class="paw-grid">
-                <div class="inventory-slot paw-slot">
-                    <div class="slot-label">Main paw</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{main_paw}</textarea>
+            <div class="paw-column">
+                <div class="paw-grid">
+                    <div class="inventory-slot paw-slot">
+                        <div class="slot-label">Main paw</div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{main_paw}</textarea>
+                        </div>
+                    </div>
+                    <div class="inventory-slot paw-slot">
+                        <div class="slot-label">Off paw</div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{off_paw}</textarea>
+                        </div>
                     </div>
                 </div>
-                <div class="inventory-slot paw-slot">
-                    <div class="slot-label">Off paw</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{off_paw}</textarea>
-                    </div>
-                </div>
+                <div class="inventory-legend-item"><strong>Carried:</strong> Ready to use.</div>
             </div>
-            <div class="body-grid">
-                <div class="inventory-slot body-slot">
-                    <div class="slot-label">Body</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{body[0]}</textarea>
+            <div class="body-column">
+                <div class="body-grid">
+                    <div class="inventory-slot body-slot">
+                        <div class="slot-label">Body</div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{body[0]}</textarea>
+                        </div>
+                    </div>
+                    <div class="inventory-slot body-slot">
+                        <div class="slot-label">Body</div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{body[1]}</textarea>
+                        </div>
                     </div>
                 </div>
-                <div class="inventory-slot body-slot">
-                    <div class="slot-label">Body</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{body[1]}</textarea>
-                    </div>
-                </div>
+                <div class="inventory-legend-item"><strong>Worn:</strong> Quick to ready.</div>
             </div>
-            <div class="pack-grid">
-                <div class="inventory-slot pack-slot">
-                    <div class="slot-label">1</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{pack[0]}</textarea>
+            <div class="pack-column">
+                <div class="pack-grid">
+                    <div class="inventory-slot pack-slot">
+                        <div class="slot-header">
+                            <span class="slot-label">1</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{pack[0]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
+                    </div>
+                    <div class="inventory-slot pack-slot">
+                        <div class="slot-header">
+                            <span class="slot-label">2</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{pack[1]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
+                    </div>
+                    <div class="inventory-slot pack-slot">
+                        <div class="slot-header">
+                            <span class="slot-label">3</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{pack[2]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
+                    </div>
+                    <div class="inventory-slot pack-slot">
+                        <div class="slot-header">
+                            <span class="slot-label">4</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{pack[3]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
+                    </div>
+                    <div class="inventory-slot pack-slot">
+                        <div class="slot-header">
+                            <span class="slot-label">5</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{pack[4]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
+                    </div>
+                    <div class="inventory-slot pack-slot">
+                        <div class="slot-header">
+                            <span class="slot-label">6</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
+                        <div class="slot-content">
+                            <textarea placeholder="">{pack[5]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
                     </div>
                 </div>
-                <div class="inventory-slot pack-slot">
-                    <div class="slot-label">2</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{pack[1]}</textarea>
-                    </div>
-                </div>
-                <div class="inventory-slot pack-slot">
-                    <div class="slot-label">3</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{pack[2]}</textarea>
-                    </div>
-                </div>
-                <div class="inventory-slot pack-slot">
-                    <div class="slot-label">4</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{pack[3]}</textarea>
-                    </div>
-                </div>
-                <div class="inventory-slot pack-slot">
-                    <div class="slot-label">5</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{pack[4]}</textarea>
-                    </div>
-                </div>
-                <div class="inventory-slot pack-slot">
-                    <div class="slot-label">6</div>
-                    <div class="slot-content">
-                        <textarea placeholder="">{pack[5]}</textarea>
-                    </div>
-                </div>
+                <div class="inventory-legend-item"><strong>Pack:</strong> Takes time to ready. During combat, requires an action to retrieve.</div>
             </div>
-        </div>
-        <div class="inventory-legend">
-            <span><strong>Carried:</strong> Ready to use.</span>
-            <span><strong>Worn:</strong> Quick to ready.</span>
-            <span><strong>Pack:</strong> Takes time to ready. During combat, requires an action to retrieve.</span>
         </div>
     </div>"""
 
@@ -260,6 +329,17 @@ def _build_footer() -> str:
     return f"""
     <div class="sheet-footer">
         This is a personal project. Original character sheet design © <a href="https://mausritter.com" target="_blank">Mausritter</a> by Losing Games.
+    </div>
+
+    <div class="item-selector-modal" id="itemSelectorModal">
+        <div class="item-selector-content">
+            <div class="item-selector-header">
+                <span>Select Item</span>
+                <button class="close-modal" onclick="closeItemSelector()">&times;</button>
+            </div>
+            <div class="item-selector-body" id="itemSelectorBody">
+            </div>
+        </div>
     </div>
 
     <div class="dice-roller">

@@ -18,6 +18,7 @@ def get_javascript_code() -> str:
         const FIRST_NAMES = {json.dumps(data["FIRST_NAMES"])};
         const LAST_NAMES = {json.dumps(data["LAST_NAMES"])};
         const WEAPONS = {json.dumps(data["WEAPONS"])};
+        const INVENTORY_ITEMS = {json.dumps(data["INVENTORY_ITEMS"])};
 
         function rollDiceSum(numDice, sides) {{
             let total = 0;
@@ -229,6 +230,9 @@ def get_javascript_code() -> str:
                 // Clear text areas
                 document.querySelectorAll('.portrait-input, .conditions-box textarea, .banked-box textarea').forEach(ta => ta.value = '');
 
+                // Reset usage markers
+                resetUsageMarkers();
+
                 alert('New character generated: ' + name + '\\nSTR: ' + str + ', DEX: ' + dex + ', WIL: ' + wil + '\\nHP: ' + hp + ', Pips: ' + pips + '\\nBackground: ' + background);
             }} catch (error) {{
                 console.error('Error generating character:', error);
@@ -335,10 +339,126 @@ def get_javascript_code() -> str:
             resultsDiv.appendChild(summary);
         }}
 
+        function toggleUsage(marker) {{
+            marker.classList.toggle('used');
+
+            // Check if all markers in this slot are used
+            const slot = marker.closest('.pack-slot');
+            const markers = slot.querySelectorAll('.usage-marker');
+            const allUsed = Array.from(markers).every(m => m.classList.contains('used'));
+
+            if (allUsed) {{
+                slot.classList.add('depleted');
+            }} else {{
+                slot.classList.remove('depleted');
+            }}
+        }}
+
+        function resetUsageMarkers() {{
+            // Reset all usage markers and depleted states
+            document.querySelectorAll('.usage-marker').forEach(marker => {{
+                marker.classList.remove('used');
+            }});
+            document.querySelectorAll('.pack-slot').forEach(slot => {{
+                slot.classList.remove('depleted');
+            }});
+        }}
+
+        // Item selector state
+        let currentTargetSlot = null;
+
+        function openItemSelector(button) {{
+            // Find the pack-slot that contains this button
+            currentTargetSlot = button.closest('.pack-slot');
+
+            // Build the item selector content
+            const body = document.getElementById('itemSelectorBody');
+            body.innerHTML = '';
+
+            for (const [category, items] of Object.entries(INVENTORY_ITEMS)) {{
+                const categoryDiv = document.createElement('div');
+                categoryDiv.className = 'item-category';
+
+                const header = document.createElement('div');
+                header.className = 'item-category-header';
+                header.textContent = category;
+                header.onclick = function() {{
+                    const itemsDiv = this.nextElementSibling;
+                    itemsDiv.classList.toggle('expanded');
+                }};
+
+                const itemsDiv = document.createElement('div');
+                itemsDiv.className = 'item-category-items';
+
+                items.forEach(item => {{
+                    const itemOption = document.createElement('div');
+                    itemOption.className = 'item-option';
+                    itemOption.textContent = item;
+                    itemOption.onclick = function() {{
+                        selectItem(item);
+                    }};
+                    itemsDiv.appendChild(itemOption);
+                }});
+
+                categoryDiv.appendChild(header);
+                categoryDiv.appendChild(itemsDiv);
+                body.appendChild(categoryDiv);
+            }}
+
+            // Show the modal
+            document.getElementById('itemSelectorModal').classList.add('active');
+        }}
+
+        function closeItemSelector() {{
+            document.getElementById('itemSelectorModal').classList.remove('active');
+            currentTargetSlot = null;
+        }}
+
+        function selectItem(itemName) {{
+            if (currentTargetSlot) {{
+                const textarea = currentTargetSlot.querySelector('.slot-content textarea');
+                if (textarea) {{
+                    // Format item with brackets on new line if needed
+                    if (itemName.includes('(') && itemName.includes(')')) {{
+                        const idx = itemName.indexOf('(');
+                        const name = itemName.substring(0, idx).trim();
+                        const details = itemName.substring(idx);
+                        textarea.value = name + '\\n' + details;
+                    }} else {{
+                        textarea.value = itemName;
+                    }}
+                }}
+
+                // Reset usage markers for this slot
+                const markers = currentTargetSlot.querySelectorAll('.usage-marker');
+                markers.forEach(m => m.classList.remove('used'));
+                currentTargetSlot.classList.remove('depleted');
+            }}
+            closeItemSelector();
+        }}
+
+        function clearSlot(button) {{
+            const slot = button.closest('.pack-slot');
+            const textarea = slot.querySelector('.slot-content textarea');
+            if (textarea) {{
+                textarea.value = '';
+            }}
+            // Reset usage markers
+            const markers = slot.querySelectorAll('.usage-marker');
+            markers.forEach(m => m.classList.remove('used'));
+            slot.classList.remove('depleted');
+        }}
+
         // Make functions globally accessible
         window.generateNewCharacter = generateNewCharacter;
         window.toggleDiceRoller = toggleDiceRoller;
         window.rollDice = rollDice;
+        window.toggleUsage = toggleUsage;
+        window.resetUsageMarkers = resetUsageMarkers;
+        window.openItemSelector = openItemSelector;
+        window.closeItemSelector = closeItemSelector;
+        window.selectItem = selectItem;
+        window.clearSlot = clearSlot;
 
         document.addEventListener('DOMContentLoaded', function() {{
             console.log('Character sheet loaded');
