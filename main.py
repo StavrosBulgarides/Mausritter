@@ -16,9 +16,11 @@ def main() -> None:
     character = generate_character()
 
     print(f"\nCharacter Generated: {character['name']}")
-    print(f"STR: {character['attributes']['STR']}, DEX: {character['attributes']['DEX']}, WIL: {character['attributes']['WIL']}")
-    print(f"HP: {character['hp']}, Pips: {character['pips']}")
+    attrs = character['attributes']
+    print(f"STR: {attrs['STR']['max']}, DEX: {attrs['DEX']['max']}, WIL: {attrs['WIL']['max']}")
+    print(f"HP: {character['hp']['max']}, Pips: {character['pips']}")
     print(f"Background: {character['background']}")
+    print(f"Level: {character['level']}, XP: {character['xp']}, Grit: {character['grit']}")
     print(f"Equipment: {', '.join(character['equipment'])}")
 
     # Create temp file (OS cleans these up automatically)

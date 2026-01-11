@@ -21,190 +21,262 @@ def _build_head(character_name: str) -> str:
 </head>"""
 
 
-def _build_header(name: str) -> str:
-    """Build the character sheet header with name input."""
-    return f"""    <div class="character-sheet">
-        <button class="generate-new-btn" onclick="generateNewCharacter()">Generate New Character</button>
-        <h1>
-            <input type="text" value="{name}" style="text-align: center; border: none; font-size: 1em; width: 100%; background: transparent; font-weight: bold; color: #8b4513;" />
-        </h1>"""
-
-
-def _build_attributes_section(attributes: Dict[str, int]) -> str:
-    """Build the attributes section (STR, DEX, WIL)."""
-    return f"""
-        <div class="section">
-            <div class="section-title">Attributes</div>
-            <div class="attributes-grid">
-                <div class="attribute">
-                    <div class="attribute-label">Strength (STR)</div>
-                    <input type="number" value="{attributes['STR']}" min="3" max="18" class="attribute-value" style="width: 100%;" />
-                </div>
-                <div class="attribute">
-                    <div class="attribute-label">Dexterity (DEX)</div>
-                    <input type="number" value="{attributes['DEX']}" min="3" max="18" class="attribute-value" style="width: 100%;" />
-                </div>
-                <div class="attribute">
-                    <div class="attribute-label">Willpower (WIL)</div>
-                    <input type="number" value="{attributes['WIL']}" min="3" max="18" class="attribute-value" style="width: 100%;" />
-                </div>
-            </div>
-        </div>"""
-
-
-def _build_stats_section(hp: int, pips: int) -> str:
-    """Build the stats section (HP, Pips)."""
-    return f"""
-        <div class="section">
-            <div class="section-title">Stats</div>
-            <div class="stats-row">
-                <div class="stat-box">
-                    <div class="stat-label">Hit Protection (HP)</div>
-                    <input type="number" value="{hp}" min="0" max="20" style="width: 100%;" />
-                </div>
-                <div class="stat-box">
-                    <div class="stat-label">Pips</div>
-                    <input type="number" value="{pips}" min="0" style="width: 100%;" />
-                </div>
-            </div>
-        </div>"""
-
-
-def _build_background_section(background: str) -> str:
-    """Build the background section."""
-    return f"""
-        <div class="section">
-            <div class="section-title">Background</div>
-            <input type="text" value="{background}" style="width: 100%; font-size: 1.1em; padding: 10px;" />
-        </div>"""
-
-
-def _build_appearance_section(appearance: Dict[str, str]) -> str:
-    """Build the appearance section."""
-    return f"""
-        <div class="section">
-            <div class="section-title">Appearance</div>
-            <div class="appearance-grid">
-                <div class="appearance-item">
-                    <div class="appearance-label">Birthsign</div>
-                    <input type="text" value="{appearance['birthsign']}" />
-                </div>
-                <div class="appearance-item">
-                    <div class="appearance-label">Coat Color</div>
-                    <input type="text" value="{appearance['coat_color']}" />
-                </div>
-                <div class="appearance-item">
-                    <div class="appearance-label">Coat Pattern</div>
-                    <input type="text" value="{appearance['coat_pattern']}" />
-                </div>
-                <div class="appearance-item">
-                    <div class="appearance-label">Physical Detail</div>
-                    <input type="text" value="{appearance['physical_detail']}" />
-                </div>
-            </div>
-        </div>"""
-
-
-def _build_equipment_item(item: str, index: int) -> str:
-    """Build a single equipment item."""
-    item_id = f"item_{index}"
-    return f"""                <div class="equipment-item">
-                    <input type="text" class="equipment-name" value="{item}" />
-                    <div class="equipment-uses">
-                        <span class="equipment-uses-label">Uses:</span>
-                        <div class="equipment-uses-checkboxes">
-                            <label><input type="checkbox" name="{item_id}_use1" /> 1</label>
-                            <label><input type="checkbox" name="{item_id}_use2" /> 2</label>
-                            <label><input type="checkbox" name="{item_id}_use3" /> 3</label>
-                        </div>
-                    </div>
-                </div>"""
-
-
-def _build_empty_equipment_slot(index: int) -> str:
-    """Build an empty equipment slot."""
-    item_id = f"item_{index}"
-    return f"""                <div class="equipment-item">
-                    <input type="text" class="equipment-name" value="" placeholder="Additional item..." />
-                    <div class="equipment-uses">
-                        <span class="equipment-uses-label">Uses:</span>
-                        <div class="equipment-uses-checkboxes">
-                            <label><input type="checkbox" name="{item_id}_use1" /> 1</label>
-                            <label><input type="checkbox" name="{item_id}_use2" /> 2</label>
-                            <label><input type="checkbox" name="{item_id}_use3" /> 3</label>
-                        </div>
-                    </div>
-                </div>"""
-
-
-def _build_equipment_section(equipment: List[str], total_slots: int = 10) -> str:
-    """Build the equipment section."""
-    items_html = "\n".join(
-        _build_equipment_item(item, idx) for idx, item in enumerate(equipment)
-    )
-    empty_slots_html = "\n".join(
-        _build_empty_equipment_slot(idx)
-        for idx in range(len(equipment), total_slots)
-    )
-
-    return f"""
-        <div class="section">
-            <div class="section-title">Equipment (Items have 3 uses - check boxes as you use them)</div>
-            <div class="equipment-list">
-{items_html}
-{empty_slots_html}
-            </div>
-        </div>"""
-
-
-def _build_conditions_section() -> str:
-    """Build the conditions section."""
+def _build_generate_button() -> str:
+    """Build the generate new character button."""
     return """
-        <div class="section">
-            <div class="section-title">Conditions</div>
-            <div class="conditions-list">
-                <div class="condition-item"><input type="text" value="" placeholder="Condition..." /></div>
-                <div class="condition-item"><input type="text" value="" placeholder="Condition..." /></div>
-                <div class="condition-item"><input type="text" value="" placeholder="Condition..." /></div>
-                <div class="condition-item"><input type="text" value="" placeholder="Condition..." /></div>
+    <div class="generate-section">
+        <button class="generate-btn" onclick="generateNewCharacter()">Generate New Character</button>
+    </div>"""
+
+
+def _build_header_section(character: Dict[str, Any]) -> str:
+    """Build the header section with name, background, and appearance."""
+    appearance = character["appearance"]
+    return f"""
+    <div class="header-section">
+        <div class="name-background-box">
+            <div class="name-row">
+                <span class="name-label">Name</span>
+                <input type="text" class="name-input" value="{character['name']}" placeholder="Enter name" />
             </div>
-        </div>"""
-
-
-def _build_notes_section() -> str:
-    """Build the notes section."""
-    return """
-        <div class="section">
-            <div class="section-title">Notes</div>
-            <textarea placeholder="Add your notes here..."></textarea>
-        </div>"""
-
-
-def _build_dice_roller() -> str:
-    """Build the dice roller section."""
-    return """
-        <div style="text-align: center; margin-top: 20px; color: #666; font-size: 0.9em;">
+            <div class="background-row">
+                <span class="background-label">Background</span>
+                <input type="text" class="background-input" value="{character['background']}" placeholder="Enter background" />
+            </div>
         </div>
+        <div class="appearance-box">
+            <div class="appearance-row">
+                <span class="appearance-label">Birthsign</span>
+                <input type="text" value="{appearance['birthsign']} ({appearance['disposition']})" placeholder="Enter birthsign" />
+            </div>
+            <div class="appearance-row">
+                <span class="appearance-label">Coat</span>
+                <input type="text" value="{appearance['coat']}" placeholder="Enter coat" />
+            </div>
+            <div class="appearance-row">
+                <span class="appearance-label">Look</span>
+                <input type="text" value="{appearance['look']}" placeholder="Enter look" />
+            </div>
+        </div>
+    </div>"""
 
-        <div class="dice-roller">
-            <div class="dice-roller-header">
-                <span class="dice-roller-title">Dice Roller</span>
-                <span class="dice-roller-toggle" id="diceToggle">&#x25BC;</span>
-            </div>
-            <div class="dice-roller-content" id="diceContent">
-                <div class="dice-input-section">
-                    <input type="text" class="dice-input" id="diceInput" placeholder="e.g., 2d6, 4d20" value="2d6" />
-                    <button class="roll-btn" onclick="rollDice()">Roll Dice</button>
+
+def _build_middle_section(character: Dict[str, Any]) -> str:
+    """Build the middle section with portrait and stats."""
+    attrs = character["attributes"]
+    hp = character["hp"]
+    pips = character["pips"]
+    pips_total = character["pips_total"]
+
+    return f"""
+    <div class="middle-section">
+        <div class="portrait-box">
+            <div class="portrait-label">Portrait/description</div>
+            <textarea class="portrait-input" placeholder="Enter description..."></textarea>
+        </div>
+        <div class="stats-box">
+            <div class="attributes-section">
+                <div class="attributes-header">
+                    <span></span>
+                    <span>Max</span>
+                    <span>Current</span>
                 </div>
-                <div class="dice-results" id="diceResults"></div>
+                <div class="attributes-table">
+                    <div class="attribute-row">
+                        <span class="attribute-label">STR</span>
+                        <input type="number" value="{attrs['STR']['max']}" min="1" max="18" />
+                        <input type="number" value="{attrs['STR']['current']}" min="0" max="18" />
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">DEX</span>
+                        <input type="number" value="{attrs['DEX']['max']}" min="1" max="18" />
+                        <input type="number" value="{attrs['DEX']['current']}" min="0" max="18" />
+                    </div>
+                    <div class="attribute-row">
+                        <span class="attribute-label">WIL</span>
+                        <input type="number" value="{attrs['WIL']['max']}" min="1" max="18" />
+                        <input type="number" value="{attrs['WIL']['current']}" min="0" max="18" />
+                    </div>
+                </div>
             </div>
-        </div>"""
+            <div class="hp-section">
+                <div class="hp-table">
+                    <div class="hp-row">
+                        <span class="hp-label">HP</span>
+                        <input type="number" value="{hp['max']}" min="1" max="20" />
+                        <input type="number" value="{hp['current']}" min="0" max="20" />
+                    </div>
+                </div>
+                <div class="hp-footer">
+                    <span></span>
+                    <span>Max</span>
+                    <span>Current</span>
+                </div>
+            </div>
+            <div class="pips-section">
+                <div class="pips-table">
+                    <div class="pips-row">
+                        <span class="pips-icon">🐭</span>
+                        <span class="pips-label">Pips</span>
+                        <input type="number" value="{pips}" min="0" class="pips-input" />
+                        <span class="pips-total">/ <input type="number" value="{pips_total}" min="0" class="pips-total-input" /></span>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>"""
+
+
+def _build_inventory_section(character: Dict[str, Any]) -> str:
+    """Build the inventory section with slot grid."""
+    inventory = character.get("inventory", {})
+    main_paw = inventory.get("main_paw", "")
+    off_paw = inventory.get("off_paw", "")
+    body = inventory.get("body", ["", ""])
+    pack = inventory.get("pack", ["", "", "", "", "", ""])
+
+    return f"""
+    <div class="inventory-section">
+        <div class="inventory-header">
+            <span class="inventory-title">Inventory</span>
+        </div>
+        <div class="inventory-container">
+            <div class="paw-grid">
+                <div class="inventory-slot paw-slot">
+                    <div class="slot-label">Main paw</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{main_paw}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot paw-slot">
+                    <div class="slot-label">Off paw</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{off_paw}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="body-grid">
+                <div class="inventory-slot body-slot">
+                    <div class="slot-label">Body</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{body[0]}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot body-slot">
+                    <div class="slot-label">Body</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{body[1]}</textarea>
+                    </div>
+                </div>
+            </div>
+            <div class="pack-grid">
+                <div class="inventory-slot pack-slot">
+                    <div class="slot-label">1</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{pack[0]}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot pack-slot">
+                    <div class="slot-label">2</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{pack[1]}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot pack-slot">
+                    <div class="slot-label">3</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{pack[2]}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot pack-slot">
+                    <div class="slot-label">4</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{pack[3]}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot pack-slot">
+                    <div class="slot-label">5</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{pack[4]}</textarea>
+                    </div>
+                </div>
+                <div class="inventory-slot pack-slot">
+                    <div class="slot-label">6</div>
+                    <div class="slot-content">
+                        <textarea placeholder="">{pack[5]}</textarea>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <div class="inventory-legend">
+            <span><strong>Carried:</strong> Ready to use.</span>
+            <span><strong>Worn:</strong> Quick to ready.</span>
+            <span><strong>Pack:</strong> Takes time to ready. During combat, requires an action to retrieve.</span>
+        </div>
+    </div>"""
+
+
+def _build_bottom_section(character: Dict[str, Any]) -> str:
+    """Build the bottom section with level, grit, and banked items."""
+    level = character.get("level", 1)
+    xp = character.get("xp", 0)
+    grit = character.get("grit", 0)
+
+    return f"""
+    <div class="bottom-section">
+        <div class="level-xp-box">
+            <div class="level-box">
+                <div class="level-label">Level</div>
+                <input type="number" value="{level}" min="1" max="10" />
+            </div>
+            <div class="xp-box">
+                <div class="xp-label">XP</div>
+                <input type="number" value="{xp}" min="0" />
+            </div>
+            <div class="level-note">Recovered treasure ▸ XP</div>
+        </div>
+        <div class="grit-conditions-box">
+            <div class="grit-box">
+                <div class="grit-label">Grit</div>
+                <input type="number" value="{grit}" min="0" max="6" />
+            </div>
+            <div class="conditions-box">
+                <div class="conditions-label">Ignored conditions</div>
+                <textarea placeholder=""></textarea>
+            </div>
+            <div class="grit-note">Ignore a number of conditions equal to your Grit</div>
+        </div>
+        <div class="banked-box">
+            <div class="banked-label">Banked items and pips</div>
+            <textarea placeholder=""></textarea>
+            <div class="mausritter-logo">Mausritter</div>
+        </div>
+    </div>"""
 
 
 def _build_footer() -> str:
-    """Build the closing tags and script section."""
+    """Build the footer section."""
     js_code = get_javascript_code()
-    return f"""    </div>
+    return f"""
+    <div class="sheet-footer">
+        This is a personal project. Original character sheet design © <a href="https://mausritter.com" target="_blank">Mausritter</a> by Losing Games.
+    </div>
+
+    <div class="dice-roller">
+        <div class="dice-roller-header" onclick="toggleDiceRoller()">
+            <span class="dice-roller-title">Dice Roller</span>
+            <span class="dice-roller-toggle" id="diceToggle">▼</span>
+        </div>
+        <div class="dice-roller-content" id="diceContent">
+            <div class="dice-input-section">
+                <input type="text" class="dice-input" id="diceInput" placeholder="e.g., 2d6, 4d20" value="2d6" />
+                <button class="roll-btn" onclick="rollDice()">Roll Dice</button>
+            </div>
+            <div class="dice-results" id="diceResults"></div>
+        </div>
+    </div>
+
+    </div>
 
     <script>
 {js_code}
@@ -223,15 +295,12 @@ def create_html_character_sheet(character: Dict[str, Any], output_path: Path) ->
     html_parts = [
         _build_head(character["name"]),
         "<body>",
-        _build_header(character["name"]),
-        _build_attributes_section(character["attributes"]),
-        _build_stats_section(character["hp"], character["pips"]),
-        _build_background_section(character["background"]),
-        _build_appearance_section(character["appearance"]),
-        _build_equipment_section(character["equipment"]),
-        _build_conditions_section(),
-        _build_notes_section(),
-        _build_dice_roller(),
+        '    <div class="character-sheet">',
+        _build_generate_button(),
+        _build_header_section(character),
+        _build_middle_section(character),
+        _build_inventory_section(character),
+        _build_bottom_section(character),
         _build_footer(),
     ]
 

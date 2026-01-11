@@ -99,88 +99,123 @@ def get_javascript_code() -> str:
                 const lastName = randomChoice(LAST_NAMES);
                 const name = firstName + ' ' + lastName;
 
-                // Update the form fields
-                const nameInput = document.querySelector('h1 input[type="text"]');
+                // Update name
+                const nameInput = document.querySelector('.name-input');
                 if (nameInput) nameInput.value = name;
 
-                // Update attributes (STR, DEX, WIL)
-                const attrInputs = document.querySelectorAll('.attribute input[type="number"]');
-                if (attrInputs.length >= 3) {{
-                    attrInputs[0].value = str;
-                    attrInputs[1].value = dex;
-                    attrInputs[2].value = wil;
-                }} else {{
-                    console.error('Could not find attribute inputs');
-                }}
+                // Update background
+                const backgroundInput = document.querySelector('.background-input');
+                if (backgroundInput) backgroundInput.value = background;
 
-                // Update stats (HP, Pips)
-                const statInputs = document.querySelectorAll('.stat-box input[type="number"]');
-                if (statInputs.length >= 2) {{
-                    statInputs[0].value = hp;
-                    statInputs[1].value = pips;
-                }} else {{
-                    console.error('Could not find stat inputs');
-                }}
-
-                // Update background - find section with "Background" title
-                const allSections = document.querySelectorAll('.section');
-                let backgroundUpdated = false;
-                for (let section of allSections) {{
-                    const title = section.querySelector('.section-title');
-                    if (title && title.textContent.trim() === 'Background') {{
-                        const bgInput = section.querySelector('input[type="text"]');
-                        if (bgInput) {{
-                            bgInput.value = background;
-                            backgroundUpdated = true;
-                            break;
+                // Update attributes (STR, DEX, WIL) - each row has max and current inputs
+                const attrRows = document.querySelectorAll('.attribute-row');
+                if (attrRows.length >= 3) {{
+                    const attrs = [str, dex, wil];
+                    attrRows.forEach((row, index) => {{
+                        const inputs = row.querySelectorAll('input[type="number"]');
+                        if (inputs.length >= 2) {{
+                            inputs[0].value = attrs[index];  // max
+                            inputs[0].max = attrs[index];    // set max attribute on input
+                            inputs[1].value = attrs[index];  // current starts at max
+                            inputs[1].max = attrs[index];    // current can't exceed max
                         }}
+                    }});
+                }}
+
+                // Update HP - row has max and current inputs
+                const hpRow = document.querySelector('.hp-row');
+                if (hpRow) {{
+                    const hpInputs = hpRow.querySelectorAll('input[type="number"]');
+                    if (hpInputs.length >= 2) {{
+                        hpInputs[0].value = hp;   // max
+                        hpInputs[0].max = hp;     // set max attribute on input
+                        hpInputs[1].value = hp;   // current starts at max
+                        hpInputs[1].max = hp;     // current can't exceed max
                     }}
                 }}
-                if (!backgroundUpdated) {{
-                    console.error('Could not find background input');
-                }}
+
+                // Update Pips
+                const pipsInput = document.querySelector('.pips-input');
+                const pipsTotalInput = document.querySelector('.pips-total-input');
+                if (pipsInput) pipsInput.value = pips;
+                if (pipsTotalInput) pipsTotalInput.value = pips;
 
                 // Update appearance
-                const appearanceInputs = document.querySelectorAll('.appearance-item input[type="text"]');
-                if (appearanceInputs.length >= 5) {{
-                    appearanceInputs[0].value = birthsign;
-                    appearanceInputs[1].value = disposition;
-                    appearanceInputs[2].value = coatColor;
-                    appearanceInputs[3].value = coatPattern;
-                    appearanceInputs[4].value = physicalDetail;
-                }} else if (appearanceInputs.length >= 4) {{
-                    // Legacy 4-field format
-                    appearanceInputs[0].value = birthsign + ' (' + disposition + ')';
-                    appearanceInputs[1].value = coatColor;
-                    appearanceInputs[2].value = coatPattern;
-                    appearanceInputs[3].value = physicalDetail;
-                }} else {{
-                    console.error('Could not find appearance inputs');
+                const appearanceRows = document.querySelectorAll('.appearance-row input[type="text"]');
+                if (appearanceRows.length >= 3) {{
+                    appearanceRows[0].value = birthsign + ' (' + disposition + ')';
+                    appearanceRows[1].value = coatColor + ', ' + coatPattern;
+                    appearanceRows[2].value = physicalDetail;
                 }}
 
-                // Update equipment
-                const equipmentItems = document.querySelectorAll('.equipment-item');
-                equipment.forEach((item, index) => {{
-                    if (equipmentItems[index]) {{
-                        const nameInput = equipmentItems[index].querySelector('.equipment-name');
-                        if (nameInput) {{
-                            nameInput.value = item;
+                // Helper to format item text with brackets on new line
+                function formatItemText(item) {{
+                    if (item.includes('(') && item.includes(')')) {{
+                        const idx = item.indexOf('(');
+                        const name = item.substring(0, idx).trim();
+                        const details = item.substring(idx);
+                        return name + '\\n' + details;
+                    }}
+                    return item;
+                }}
+
+                // Update inventory slots (now using textareas)
+                // New structure: paw-grid (main_paw, off_paw), body-grid (body[0], body[1]), pack-grid (1-6)
+                const pawSlots = document.querySelectorAll('.paw-grid .slot-content textarea');
+                const bodySlots = document.querySelectorAll('.body-grid .slot-content textarea');
+                const packSlots = document.querySelectorAll('.pack-grid .slot-content textarea');
+
+                // Clear all slots first
+                pawSlots.forEach(slot => slot.value = '');
+                bodySlots.forEach(slot => slot.value = '');
+                packSlots.forEach(slot => slot.value = '');
+
+                // Weapon goes to main paw (or off paw for heavy)
+                const formattedWeapon = formatItemText(equipment[2]);
+                if (pawSlots[0]) pawSlots[0].value = formattedWeapon;
+
+                // Check if any items are armor for body slots
+                const packItems = [];
+                const armorKeywords = ['armour', 'armor', 'jerkin'];
+                let bodySlotIdx = 0;
+
+                // Process background items (itemA and itemB at indices 3 and 4)
+                [equipment[3], equipment[4]].forEach(item => {{
+                    if (item) {{
+                        const isArmor = armorKeywords.some(kw => item.toLowerCase().includes(kw));
+                        const formattedItem = formatItemText(item);
+                        if (isArmor && bodySlotIdx < 2) {{
+                            bodySlots[bodySlotIdx].value = formattedItem;
+                            bodySlotIdx++;
+                        }} else {{
+                            packItems.push(formattedItem);
                         }}
-                        // Reset usage checkboxes
-                        equipmentItems[index].querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
                     }}
                 }});
 
-                // Clear remaining equipment slots
-                for (let i = equipment.length; i < equipmentItems.length; i++) {{
-                    if (equipmentItems[i]) {{
-                        const nameInput = equipmentItems[i].querySelector('.equipment-name');
-                        if (nameInput) {{
-                            nameInput.value = '';
-                        }}
-                        equipmentItems[i].querySelectorAll('input[type="checkbox"]').forEach(cb => cb.checked = false);
-                    }}
-                }}
+                // Add torches, rations to pack
+                packItems.unshift(equipment[1]);  // Rations
+                packItems.unshift(equipment[0]);  // Torches
+
+                // Add additional items from low stats
+                if (equipment[5]) packItems.push(formatItemText(equipment[5]));
+                if (equipment[6]) packItems.push(formatItemText(equipment[6]));
+
+                // Fill pack slots
+                packItems.forEach((item, idx) => {{
+                    if (packSlots[idx]) packSlots[idx].value = item;
+                }});
+
+                // Reset level, XP, grit to starting values
+                const levelInput = document.querySelector('.level-box input[type="number"]');
+                const xpInput = document.querySelector('.xp-box input[type="number"]');
+                const gritInput = document.querySelector('.grit-box input[type="number"]');
+                if (levelInput) levelInput.value = 1;
+                if (xpInput) xpInput.value = 0;
+                if (gritInput) gritInput.value = 0;
+
+                // Clear text areas
+                document.querySelectorAll('.portrait-input, .conditions-box textarea, .banked-box textarea').forEach(ta => ta.value = '');
 
                 alert('New character generated: ' + name + '\\nSTR: ' + str + ', DEX: ' + dex + ', WIL: ' + wil + '\\nHP: ' + hp + ', Pips: ' + pips + '\\nBackground: ' + background);
             }} catch (error) {{
@@ -307,17 +342,83 @@ def get_javascript_code() -> str:
                 console.error('Could not find diceInput');
             }}
 
-            // Ensure dice roller header is clickable
-            const diceHeader = document.querySelector('.dice-roller-header');
-            if (diceHeader) {{
-                diceHeader.addEventListener('click', function(e) {{
-                    e.preventDefault();
-                    e.stopPropagation();
-                    toggleDiceRoller();
+            // Dice roller uses inline onclick="toggleDiceRoller()"
+
+            // Enforce max values on current inputs for attributes
+            const attrRows = document.querySelectorAll('.attribute-row');
+            attrRows.forEach(row => {{
+                const inputs = row.querySelectorAll('input[type="number"]');
+                if (inputs.length >= 2) {{
+                    const maxInput = inputs[0];
+                    const currentInput = inputs[1];
+
+                    // When max changes, update the current input's max attribute
+                    maxInput.addEventListener('change', function() {{
+                        currentInput.max = this.value;
+                        if (parseInt(currentInput.value) > parseInt(this.value)) {{
+                            currentInput.value = this.value;
+                        }}
+                    }});
+
+                    // Enforce current can't exceed max
+                    currentInput.addEventListener('change', function() {{
+                        const maxVal = parseInt(maxInput.value);
+                        if (parseInt(this.value) > maxVal) {{
+                            this.value = maxVal;
+                        }}
+                        if (parseInt(this.value) < 0) {{
+                            this.value = 0;
+                        }}
+                    }});
+                }}
+            }});
+
+            // Enforce max values on HP
+            const hpRow = document.querySelector('.hp-row');
+            if (hpRow) {{
+                const hpInputs = hpRow.querySelectorAll('input[type="number"]');
+                if (hpInputs.length >= 2) {{
+                    const maxHpInput = hpInputs[0];
+                    const currentHpInput = hpInputs[1];
+
+                    maxHpInput.addEventListener('change', function() {{
+                        currentHpInput.max = this.value;
+                        if (parseInt(currentHpInput.value) > parseInt(this.value)) {{
+                            currentHpInput.value = this.value;
+                        }}
+                    }});
+
+                    currentHpInput.addEventListener('change', function() {{
+                        const maxVal = parseInt(maxHpInput.value);
+                        if (parseInt(this.value) > maxVal) {{
+                            this.value = maxVal;
+                        }}
+                        if (parseInt(this.value) < 0) {{
+                            this.value = 0;
+                        }}
+                    }});
+                }}
+            }}
+
+            // Enforce pips can't exceed total
+            const pipsInput = document.querySelector('.pips-input');
+            const pipsTotalInput = document.querySelector('.pips-total-input');
+            if (pipsInput && pipsTotalInput) {{
+                pipsTotalInput.addEventListener('change', function() {{
+                    if (parseInt(pipsInput.value) > parseInt(this.value)) {{
+                        pipsInput.value = this.value;
+                    }}
                 }});
-                console.log('Dice roller header click handler attached');
-            }} else {{
-                console.error('Could not find dice roller header');
+
+                pipsInput.addEventListener('change', function() {{
+                    const maxVal = parseInt(pipsTotalInput.value);
+                    if (parseInt(this.value) > maxVal) {{
+                        this.value = maxVal;
+                    }}
+                    if (parseInt(this.value) < 0) {{
+                        this.value = 0;
+                    }}
+                }});
             }}
 
             // Test if functions are accessible

@@ -22,6 +22,17 @@ def roll_dice(num_dice: int, sides: int) -> int:
     return sum(random.randint(1, sides) for _ in range(num_dice))
 
 
+def format_item_text(item: str) -> str:
+    """Format item text so bracketed content appears on a new line."""
+    if "(" in item and ")" in item:
+        # Split at first opening bracket
+        parts = item.split("(", 1)
+        name = parts[0].strip()
+        details = "(" + parts[1]
+        return f"{name}\n{details}"
+    return item
+
+
 def generate_attributes() -> Dict[str, int]:
     """Generate STR, DEX, and WIL attributes by rolling 3d6 each."""
     return {
@@ -74,21 +85,75 @@ def generate_character() -> Dict[str, Any]:
     category = random.choice(list(WEAPONS.keys()))
     weapon_data = random.choice(WEAPONS[category])
     weapon = f"{weapon_data[0]} ({category.capitalize()}, {weapon_data[1]})"
+    weapon_category = category
 
-    # Starting equipment
+    # Build structured inventory
+    # Main paw: weapon (for light/medium) or empty
+    # Off paw: empty (or used for heavy weapons)
+    # Body: 2 slots for worn items (armor, etc.)
+    # Pack: 6 slots for carried items
+
+    # Format weapon with brackets on new line
+    formatted_weapon = format_item_text(weapon)
+
+    inventory = {
+        "main_paw": formatted_weapon if weapon_category != "heavy" else "",
+        "off_paw": formatted_weapon if weapon_category == "heavy" else "",
+        "body": ["", ""],
+        "pack": ["", "", "", "", "", ""],
+    }
+
+    # Collect all non-weapon items
+    all_items = ["Torches", "Rations", item_a, item_b] + additional_items
+
+    # Check if any items are armor and put them in body slots
+    body_slot_idx = 0
+    pack_items = []
+    for item in all_items:
+        formatted_item = format_item_text(item)
+        if "armour" in item.lower() or "armor" in item.lower() or "jerkin" in item.lower():
+            if body_slot_idx < 2:
+                inventory["body"][body_slot_idx] = formatted_item
+                body_slot_idx += 1
+            else:
+                pack_items.append(formatted_item)
+        else:
+            pack_items.append(formatted_item)
+
+    # Put remaining items in pack
+    for idx, item in enumerate(pack_items[:6]):
+        inventory["pack"][idx] = item
+
+    # Legacy flat equipment list for backwards compatibility
     equipment = ["Torches", "Rations", weapon, item_a, item_b]
     equipment.extend(additional_items)
 
     return {
         "name": name,
-        "attributes": attributes,
-        "hp": hp,
+        "attributes": {
+            "STR": {"max": attributes["STR"], "current": attributes["STR"]},
+            "DEX": {"max": attributes["DEX"], "current": attributes["DEX"]},
+            "WIL": {"max": attributes["WIL"], "current": attributes["WIL"]},
+        },
+        "hp": {"max": hp, "current": hp},
         "pips": pips,
+        "pips_total": pips,
         "background": background,
-        "equipment": equipment,
+        "level": 1,
+        "xp": 0,
+        "grit": 0,
+        "inventory": inventory,
+        "equipment": equipment,  # Legacy flat list
+        "banked": {
+            "items": [],
+            "pips": 0,
+        },
         "appearance": {
             "birthsign": birthsign,
             "disposition": disposition,
+            "coat": f"{coat_color}, {coat_pattern}",
+            "look": physical_detail,
+            # Keep individual fields for flexibility
             "coat_color": coat_color,
             "coat_pattern": coat_pattern,
             "physical_detail": physical_detail,
