@@ -70,9 +70,13 @@ def _build_middle_section(character: Dict[str, Any]) -> str:
 
     return f"""
     <div class="middle-section">
-        <div class="portrait-box">
-            <div class="portrait-label">Portrait/description</div>
-            <textarea class="portrait-input" placeholder="Enter description..."></textarea>
+        <div class="portrait-column">
+            <div class="portrait-header">
+                <span>Portrait/description</span>
+            </div>
+            <div class="portrait-box">
+                <textarea class="portrait-input" placeholder="Enter description..."></textarea>
+            </div>
         </div>
         <div class="stats-box">
             <div class="attributes-section">
@@ -143,15 +147,37 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
             <div class="paw-column">
                 <div class="paw-grid">
                     <div class="inventory-slot paw-slot">
-                        <div class="slot-label">Main paw</div>
+                        <div class="slot-header">
+                            <span class="slot-label">Main paw</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
                         <div class="slot-content">
                             <textarea placeholder="">{main_paw}</textarea>
                         </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
                     </div>
                     <div class="inventory-slot paw-slot">
-                        <div class="slot-label">Off paw</div>
+                        <div class="slot-header">
+                            <span class="slot-label">Off paw</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
                         <div class="slot-content">
                             <textarea placeholder="">{off_paw}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
                         </div>
                     </div>
                 </div>
@@ -160,15 +186,37 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
             <div class="body-column">
                 <div class="body-grid">
                     <div class="inventory-slot body-slot">
-                        <div class="slot-label">Body</div>
+                        <div class="slot-header">
+                            <span class="slot-label">Body</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
                         <div class="slot-content">
                             <textarea placeholder="">{body[0]}</textarea>
                         </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                        </div>
                     </div>
                     <div class="inventory-slot body-slot">
-                        <div class="slot-label">Body</div>
+                        <div class="slot-header">
+                            <span class="slot-label">Body</span>
+                            <span class="slot-actions">
+                                <button class="slot-btn add-btn" onclick="openItemSelector(this)">+</button>
+                                <button class="slot-btn clear-btn" onclick="clearSlot(this)">-</button>
+                            </span>
+                        </div>
                         <div class="slot-content">
                             <textarea placeholder="">{body[1]}</textarea>
+                        </div>
+                        <div class="usage-markers">
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
+                            <span class="usage-marker" onclick="toggleUsage(this)"></span>
                         </div>
                     </div>
                 </div>
@@ -336,6 +384,9 @@ def _build_footer() -> str:
             <div class="item-selector-header">
                 <span>Select Item</span>
                 <button class="close-modal" onclick="closeItemSelector()">&times;</button>
+            </div>
+            <div class="item-search-container">
+                <input type="text" class="item-search-input" id="itemSearchInput" placeholder="Search items..." oninput="filterItems(this.value)" />
             </div>
             <div class="item-selector-body" id="itemSelectorBody">
             </div>

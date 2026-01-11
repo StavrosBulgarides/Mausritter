@@ -339,18 +339,102 @@ def get_javascript_code() -> str:
             resultsDiv.appendChild(summary);
         }}
 
+        function isTorchOrLantern(slot) {{
+            const textarea = slot.querySelector('.slot-content textarea');
+            if (!textarea) return false;
+            const content = textarea.value.toLowerCase();
+            return content.includes('torch') || content.includes('lantern');
+        }}
+
         function toggleUsage(marker) {{
-            marker.classList.toggle('used');
+            const slot = marker.closest('.inventory-slot');
+            const markers = Array.from(slot.querySelectorAll('.usage-marker'));
+            const isSixUseItem = isTorchOrLantern(slot);
 
-            // Check if all markers in this slot are used
-            const slot = marker.closest('.pack-slot');
-            const markers = slot.querySelectorAll('.usage-marker');
-            const allUsed = Array.from(markers).every(m => m.classList.contains('used'));
+            // Determine if we're filling or unfilling based on any marker being used/half-used
+            const anyUsed = markers.some(m => m.classList.contains('used') || m.classList.contains('half-used'));
+            const clickedIsUsed = marker.classList.contains('used') || marker.classList.contains('half-used');
 
-            if (allUsed) {{
-                slot.classList.add('depleted');
+            if (isSixUseItem) {{
+                // 6-use items: each marker has half-used and fully-used states
+                if (clickedIsUsed) {{
+                    // Unfill: from right to left, full→half→empty
+                    for (let i = markers.length - 1; i >= 0; i--) {{
+                        if (markers[i].classList.contains('used')) {{
+                            markers[i].classList.remove('used');
+                            markers[i].classList.add('half-used');
+                            break;
+                        }} else if (markers[i].classList.contains('half-used')) {{
+                            markers[i].classList.remove('half-used');
+                            break;
+                        }}
+                    }}
+                }} else {{
+                    // Fill: from left to right, empty→half→full
+                    for (let i = 0; i < markers.length; i++) {{
+                        if (!markers[i].classList.contains('used') && !markers[i].classList.contains('half-used')) {{
+                            markers[i].classList.add('half-used');
+                            break;
+                        }} else if (markers[i].classList.contains('half-used')) {{
+                            markers[i].classList.remove('half-used');
+                            markers[i].classList.add('used');
+                            break;
+                        }}
+                    }}
+                }}
+                // Check if all markers are fully used (depleted)
+                const allFullyUsed = markers.every(m => m.classList.contains('used'));
+                if (allFullyUsed) {{
+                    slot.classList.add('depleted');
+                }} else {{
+                    slot.classList.remove('depleted');
+                }}
             }} else {{
-                slot.classList.remove('depleted');
+                // Standard 3-use items
+                if (clickedIsUsed) {{
+                    // Unfill the rightmost filled marker (3→2→1)
+                    for (let i = markers.length - 1; i >= 0; i--) {{
+                        if (markers[i].classList.contains('used')) {{
+                            markers[i].classList.remove('used');
+                            break;
+                        }}
+                    }}
+                }} else {{
+                    // Fill the leftmost empty marker (1→2→3)
+                    for (let i = 0; i < markers.length; i++) {{
+                        if (!markers[i].classList.contains('used')) {{
+                            markers[i].classList.add('used');
+                            break;
+                        }}
+                    }}
+                }}
+
+                // Check if all markers in this slot are used
+                const allUsed = markers.every(m => m.classList.contains('used'));
+
+                // Find paired slot if this is a two-slot item
+                let pairedSlot = null;
+                if (slot.classList.contains('two-slot-item')) {{
+                    const parentGrid = slot.parentElement;
+                    if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
+                        const slots = parentGrid.querySelectorAll('.inventory-slot');
+                        const currentIndex = Array.from(slots).indexOf(slot);
+                        pairedSlot = slots[currentIndex === 0 ? 1 : 0];
+                    }} else if (parentGrid.classList.contains('pack-grid')) {{
+                        const slots = parentGrid.querySelectorAll('.inventory-slot');
+                        const currentIndex = Array.from(slots).indexOf(slot);
+                        const pairedIndex = currentIndex < 3 ? currentIndex + 3 : currentIndex - 3;
+                        pairedSlot = slots[pairedIndex];
+                    }}
+                }}
+
+                if (allUsed) {{
+                    slot.classList.add('depleted');
+                    if (pairedSlot) pairedSlot.classList.add('depleted');
+                }} else {{
+                    slot.classList.remove('depleted');
+                    if (pairedSlot) pairedSlot.classList.remove('depleted');
+                }}
             }}
         }}
 
@@ -358,8 +442,9 @@ def get_javascript_code() -> str:
             // Reset all usage markers and depleted states
             document.querySelectorAll('.usage-marker').forEach(marker => {{
                 marker.classList.remove('used');
+                marker.classList.remove('half-used');
             }});
-            document.querySelectorAll('.pack-slot').forEach(slot => {{
+            document.querySelectorAll('.inventory-slot').forEach(slot => {{
                 slot.classList.remove('depleted');
             }});
         }}
@@ -368,14 +453,34 @@ def get_javascript_code() -> str:
         let currentTargetSlot = null;
 
         function openItemSelector(button) {{
-            // Find the pack-slot that contains this button
-            currentTargetSlot = button.closest('.pack-slot');
+            // Find the inventory-slot that contains this button
+            currentTargetSlot = button.closest('.inventory-slot');
 
-            // Build the item selector content
+            // Clear search input and build items
+            const searchInput = document.getElementById('itemSearchInput');
+            searchInput.value = '';
+            buildItemList('');
+
+            // Show the modal and focus search
+            document.getElementById('itemSelectorModal').classList.add('active');
+            searchInput.focus();
+        }}
+
+        function buildItemList(searchQuery) {{
             const body = document.getElementById('itemSelectorBody');
             body.innerHTML = '';
+            const query = searchQuery.toLowerCase().trim();
 
             for (const [category, items] of Object.entries(INVENTORY_ITEMS)) {{
+                // Filter items based on search query (search in name, price, slots, notes)
+                const filteredItems = query ? items.filter(item => {{
+                    const searchText = (item.name + ' ' + item.price + ' ' + item.slots + ' slot' + (item.slots > 1 ? 's' : '') + ' ' + (item.notes || '')).toLowerCase();
+                    return searchText.includes(query);
+                }}) : items;
+
+                // Skip empty categories when searching
+                if (query && filteredItems.length === 0) continue;
+
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'item-category';
 
@@ -389,13 +494,27 @@ def get_javascript_code() -> str:
 
                 const itemsDiv = document.createElement('div');
                 itemsDiv.className = 'item-category-items';
+                // Auto-expand when searching
+                if (query) itemsDiv.classList.add('expanded');
 
-                items.forEach(item => {{
+                filteredItems.forEach(item => {{
                     const itemOption = document.createElement('div');
                     itemOption.className = 'item-option';
-                    itemOption.textContent = item;
+
+                    const itemName = document.createElement('span');
+                    itemName.className = 'item-name';
+                    itemName.textContent = item.name;
+
+                    const itemDetails = document.createElement('span');
+                    itemDetails.className = 'item-details';
+                    let details = item.price + ' | ' + item.slots + ' slot' + (item.slots > 1 ? 's' : '');
+                    if (item.notes) details += ' | ' + item.notes;
+                    itemDetails.textContent = details;
+
+                    itemOption.appendChild(itemName);
+                    itemOption.appendChild(itemDetails);
                     itemOption.onclick = function() {{
-                        selectItem(item);
+                        selectItem(item.name, item.slots);
                     }};
                     itemsDiv.appendChild(itemOption);
                 }});
@@ -404,9 +523,10 @@ def get_javascript_code() -> str:
                 categoryDiv.appendChild(itemsDiv);
                 body.appendChild(categoryDiv);
             }}
+        }}
 
-            // Show the modal
-            document.getElementById('itemSelectorModal').classList.add('active');
+        function filterItems(query) {{
+            buildItemList(query);
         }}
 
         function closeItemSelector() {{
@@ -414,39 +534,126 @@ def get_javascript_code() -> str:
             currentTargetSlot = null;
         }}
 
-        function selectItem(itemName) {{
+        function selectItem(itemName, slots) {{
             if (currentTargetSlot) {{
+                // Format item text
+                let itemText = itemName;
+                if (itemName.includes('(') && itemName.includes(')')) {{
+                    const idx = itemName.indexOf('(');
+                    const name = itemName.substring(0, idx).trim();
+                    const details = itemName.substring(idx);
+                    itemText = name + '\\n' + details;
+                }}
+
                 const textarea = currentTargetSlot.querySelector('.slot-content textarea');
                 if (textarea) {{
-                    // Format item with brackets on new line if needed
-                    if (itemName.includes('(') && itemName.includes(')')) {{
-                        const idx = itemName.indexOf('(');
-                        const name = itemName.substring(0, idx).trim();
-                        const details = itemName.substring(idx);
-                        textarea.value = name + '\\n' + details;
-                    }} else {{
-                        textarea.value = itemName;
-                    }}
+                    textarea.value = itemText;
                 }}
 
                 // Reset usage markers for this slot
                 const markers = currentTargetSlot.querySelectorAll('.usage-marker');
-                markers.forEach(m => m.classList.remove('used'));
+                markers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
                 currentTargetSlot.classList.remove('depleted');
+                currentTargetSlot.classList.remove('two-slot-item');
+                currentTargetSlot.classList.remove('two-slot-secondary');
+
+                // Handle 2-slot items
+                if (slots === 2) {{
+                    currentTargetSlot.classList.add('two-slot-item');
+
+                    // Find the paired slot
+                    let pairedSlot = null;
+                    const parentGrid = currentTargetSlot.parentElement;
+
+                    if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
+                        // For paw/body grids, pair with the other slot in the same grid
+                        const slots = parentGrid.querySelectorAll('.inventory-slot');
+                        const currentIndex = Array.from(slots).indexOf(currentTargetSlot);
+                        pairedSlot = slots[currentIndex === 0 ? 1 : 0];
+                    }} else if (parentGrid.classList.contains('pack-grid')) {{
+                        // For pack grid (3x2), pair vertically (1-4, 2-5, 3-6)
+                        const slots = parentGrid.querySelectorAll('.inventory-slot');
+                        const currentIndex = Array.from(slots).indexOf(currentTargetSlot);
+                        // If in top row (0,1,2), pair with bottom row (3,4,5)
+                        // If in bottom row (3,4,5), pair with top row (0,1,2)
+                        const pairedIndex = currentIndex < 3 ? currentIndex + 3 : currentIndex - 3;
+                        pairedSlot = slots[pairedIndex];
+                    }}
+
+                    if (pairedSlot) {{
+                        const pairedTextarea = pairedSlot.querySelector('.slot-content textarea');
+                        if (pairedTextarea) {{
+                            pairedTextarea.value = itemText;
+                            pairedTextarea.readOnly = true;
+                        }}
+                        // Reset paired slot markers
+                        const pairedMarkers = pairedSlot.querySelectorAll('.usage-marker');
+                        pairedMarkers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
+                        pairedSlot.classList.remove('depleted');
+                        pairedSlot.classList.add('two-slot-secondary');
+
+                        // Set up mirroring from primary to secondary
+                        textarea.dataset.pairedSlotIndex = Array.from(parentGrid.querySelectorAll('.inventory-slot')).indexOf(pairedSlot);
+                        textarea.oninput = function() {{
+                            pairedTextarea.value = this.value;
+                        }};
+                    }}
+                }}
             }}
             closeItemSelector();
         }}
 
         function clearSlot(button) {{
-            const slot = button.closest('.pack-slot');
+            const slot = button.closest('.inventory-slot');
             const textarea = slot.querySelector('.slot-content textarea');
             if (textarea) {{
                 textarea.value = '';
             }}
             // Reset usage markers
             const markers = slot.querySelectorAll('.usage-marker');
-            markers.forEach(m => m.classList.remove('used'));
+            markers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
             slot.classList.remove('depleted');
+
+            // Check if this is part of a two-slot item and clear the paired slot
+            const parentGrid = slot.parentElement;
+            const isTwoSlot = slot.classList.contains('two-slot-item') || slot.classList.contains('two-slot-secondary');
+
+            if (isTwoSlot) {{
+                let pairedSlot = null;
+                if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
+                    const slots = parentGrid.querySelectorAll('.inventory-slot');
+                    const currentIndex = Array.from(slots).indexOf(slot);
+                    pairedSlot = slots[currentIndex === 0 ? 1 : 0];
+                }} else if (parentGrid.classList.contains('pack-grid')) {{
+                    const slots = parentGrid.querySelectorAll('.inventory-slot');
+                    const currentIndex = Array.from(slots).indexOf(slot);
+                    const pairedIndex = currentIndex < 3 ? currentIndex + 3 : currentIndex - 3;
+                    pairedSlot = slots[pairedIndex];
+                }}
+
+                if (pairedSlot) {{
+                    const pairedTextarea = pairedSlot.querySelector('.slot-content textarea');
+                    if (pairedTextarea) {{
+                        pairedTextarea.value = '';
+                        pairedTextarea.readOnly = false;
+                    }}
+                    const pairedMarkers = pairedSlot.querySelectorAll('.usage-marker');
+                    pairedMarkers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
+                    pairedSlot.classList.remove('depleted');
+                    pairedSlot.classList.remove('two-slot-item');
+                    pairedSlot.classList.remove('two-slot-secondary');
+                }}
+            }}
+
+            // Remove mirroring and readonly
+            if (textarea) {{
+                textarea.oninput = null;
+                textarea.readOnly = false;
+                delete textarea.dataset.pairedSlotIndex;
+            }}
+
+            slot.classList.remove('two-slot-item');
+            slot.classList.remove('two-slot-secondary');
         }}
 
         // Make functions globally accessible

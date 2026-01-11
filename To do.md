@@ -1,19 +1,7 @@
 # Things that I'm planning to do
 
-## Inventory
-1) Add item search dialog in the Add items list
-2) Expose additional item information on the selection dialog such as cost
-3) Review SRD to determine whether weapons can be carried in the pack but not count as weapons.
-4) Determine how to deal with items that take up two slots
-    - Replicate contents to another box
-    - Mark one box as having the item + note that the item takes up two boxes, and totally grey out another box to prevent entry.
-
-## Weapons
-1) Replicate the ability to add/delete weapons
-2) Add a selection list which refers to weapons (only)
-3) Add item search dialog in the Add items list
-4) Expose additional item information on the selection dialog such as cost
-5) Fix weapon box alignmetn to the rest of the inventory
+## Inentory
+1) Fix torch 6 use logic. Clicking on a half item should add another half first with a second click removing
 
 ## Lower section
 1) Read the rules and work out how this needs to work
@@ -30,6 +18,7 @@
 
 ## Conditions
 ## Turn based rules
+## XP
 1) Consider missing rules and how they can be implemented in the optimum way.
 
 ## GM view
