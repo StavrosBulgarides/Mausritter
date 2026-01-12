@@ -255,6 +255,7 @@ INVENTORY_ITEMS = {
         {"name": "Dried mushroom", "price": "5p", "slots": 1},
     ],
     "Miscellaneous": [
+        {"name": "Purse", "price": "1p", "slots": 1, "notes": "Holds 250 pips"},
         {"name": "Rope, 6\"", "price": "5p", "slots": 1},
         {"name": "Chain, 6\"", "price": "20p", "slots": 1},
         {"name": "Wire, spool", "price": "20p", "slots": 1},

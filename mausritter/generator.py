@@ -111,8 +111,8 @@ def generate_character() -> Dict[str, Any]:
     formatted_weapon = format_item_text(weapon)
 
     inventory = {
-        "main_paw": formatted_weapon if weapon_category != "heavy" else "",
-        "off_paw": formatted_weapon if weapon_category == "heavy" else "",
+        "main_paw": "Select weapon",
+        "off_paw": "",
         "body": ["", ""],
         "pack": ["", "", "", "", "", ""],
     }

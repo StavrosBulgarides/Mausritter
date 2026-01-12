@@ -111,18 +111,13 @@ def _build_middle_section(character: Dict[str, Any]) -> str:
                         <input type="number" value="{hp['current']}" min="0" max="20" />
                     </div>
                 </div>
-                <div class="hp-footer">
-                    <span></span>
-                    <span>Max</span>
-                    <span>Current</span>
-                </div>
             </div>
             <div class="pips-section">
                 <div class="pips-table">
                     <div class="pips-row">
                         <span class="pips-label">Pips</span>
-                        <input type="number" value="{pips}" min="0" />
-                        <input type="number" value="{pips_total}" min="0" />
+                        <input type="number" class="pips-total-input" value="250" readonly />
+                        <input type="number" class="pips-input" value="{pips}" min="0" max="250" />
                     </div>
                 </div>
             </div>
@@ -137,6 +132,9 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
     off_paw = inventory.get("off_paw", "")
     body = inventory.get("body", ["", ""])
     pack = inventory.get("pack", ["", "", "", "", "", ""])
+
+    # Add needs-selection class if main_paw is "Select weapon"
+    main_paw_class = "needs-selection" if main_paw == "Select weapon" else ""
 
     return f"""
     <div class="inventory-section">
@@ -155,7 +153,7 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
                             </span>
                         </div>
                         <div class="slot-content">
-                            <textarea placeholder="">{main_paw}</textarea>
+                            <textarea class="{main_paw_class}" placeholder="">{main_paw}</textarea>
                         </div>
                         <div class="usage-markers">
                             <span class="usage-marker" onclick="toggleUsage(this)"></span>
@@ -342,32 +340,32 @@ def _build_bottom_section(character: Dict[str, Any]) -> str:
     return f"""
     <div class="bottom-section">
         <div class="level-xp-box">
-            <div class="level-box">
-                <div class="level-label">Level</div>
+            <div class="level-row">
+                <span class="stat-label">Level</span>
                 <input type="number" value="{level}" min="1" max="10" />
             </div>
-            <div class="xp-box">
-                <div class="xp-label">XP</div>
+            <div class="xp-row">
+                <span class="stat-label">XP</span>
                 <input type="number" value="{xp}" min="0" />
             </div>
-            <div class="level-note">Recovered treasure ▸ XP</div>
         </div>
         <div class="grit-conditions-box">
-            <div class="grit-box">
-                <div class="grit-label">Grit</div>
+            <div class="grit-row">
+                <span class="stat-label">Grit</span>
                 <input type="number" value="{grit}" min="0" max="6" />
             </div>
-            <div class="conditions-box">
-                <div class="conditions-label">Ignored conditions</div>
-                <textarea placeholder=""></textarea>
+            <div class="conditions-area">
+                <textarea placeholder="Ignored conditions"></textarea>
             </div>
-            <div class="grit-note">Ignore a number of conditions equal to your Grit</div>
         </div>
         <div class="banked-box">
             <div class="banked-label">Banked items and pips</div>
             <textarea placeholder=""></textarea>
             <div class="mausritter-logo">Mausritter</div>
         </div>
+        <div class="level-note">Recovered treasure ▸ XP</div>
+        <div class="grit-note">Ignore a number of conditions equal to your Grit</div>
+        <div class="banked-note"></div>
     </div>"""
 
 
@@ -375,8 +373,29 @@ def _build_footer() -> str:
     """Build the footer section."""
     js_code = get_javascript_code()
     return f"""
-    <div class="sheet-footer">
-        This is a personal project. Original character sheet design © <a href="https://mausritter.com" target="_blank">Mausritter</a> by Losing Games.
+    <div class="custom-dialog-modal" id="confirmGenerateModal">
+        <div class="custom-dialog-content">
+            <div class="custom-dialog-header">Character generation</div>
+            <div class="custom-dialog-body">
+                Generate a new character? This will replace all current character data.
+            </div>
+            <div class="custom-dialog-buttons">
+                <button class="dialog-btn dialog-btn-secondary" onclick="closeConfirmGenerate()">Cancel</button>
+                <button class="dialog-btn dialog-btn-primary" onclick="confirmGenerate()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <div class="custom-dialog-modal" id="newCharacterModal">
+        <div class="custom-dialog-content">
+            <div class="custom-dialog-header">New character</div>
+            <div class="custom-dialog-body" id="newCharacterBody">
+            </div>
+            <div class="custom-dialog-buttons">
+                <button class="dialog-btn dialog-btn-secondary" onclick="regenerateCharacter()">Regenerate</button>
+                <button class="dialog-btn dialog-btn-primary" onclick="acceptCharacter()">Accept</button>
+            </div>
+        </div>
     </div>
 
     <div class="item-selector-modal" id="itemSelectorModal">
@@ -407,6 +426,10 @@ def _build_footer() -> str:
         </div>
     </div>
 
+    </div>
+
+    <div class="page-footer">
+        This is a personal project. Original character sheet design © <a href="https://mausritter.com" target="_blank">Mausritter</a> by Losing Games.
     </div>
 
     <script>

@@ -5,7 +5,7 @@ This file lists character-related data from the SRD that is NOT currently
 included in the character generator, or where the implementation differs
 from the official rules.
 
-Last updated: 2026-01-11
+Last updated: 2026-01-12
 
 RULES DIFFERENCES
 -----------------
@@ -13,11 +13,6 @@ RULES DIFFERENCES
    - SRD: "You may then swap any two attributes"
    - Generator: Does not offer this option
    - This is a player choice that could be offered via the HTML interface
-
-2. Weapon Selection (DIFFERS FROM RULES)
-   - SRD: "A weapon of your choice" - player should CHOOSE their weapon
-   - Generator: Randomly selects a weapon from available categories
-   - Could add a weapon selector to the HTML interface
 
 MISSING WEAPON DATA
 -------------------
@@ -32,16 +27,6 @@ MISSING WEAPON DATA
 3. Improvised Weapons (not in selection)
    - d6 damage, wielded in main paw or both paws
    - Special: Always mark usage after a fight
-
-ITEM USAGE SYSTEM (NOT IMPLEMENTED)
------------------------------------
-Most items have three usage dots that are not currently tracked:
-- Weapons/armour/ammunition: After a fight, roll d6. On 4-6, mark usage.
-- Torches/lanterns: Mark usage every 6 Turns.
-- Rations: Mark usage for each meal.
-- Other items: Mark usage when specifically used.
-- When all 3 dots marked, item is depleted/destroyed.
-- Usage dots can be cleared from weapons/armour for 10% of original cost per dot.
 
 SPELL DETAILS (NOT IMPLEMENTED)
 -------------------------------
@@ -78,13 +63,22 @@ The following features ARE now implemented:
 - Structured inventory (Paw slots, Body slots, Pack slots)
 - Max/Current tracking for attributes and HP
 - Level, XP, Grit fields
-- Pips with total tracking
+- Pips with max fixed at 250 (purse capacity)
 - Birthsign with disposition
 - Coat (color + pattern combined)
 - Physical detail (d66 table)
 - Background items placed appropriately (armor to body, others to pack)
-- Generate New Character button with JavaScript
+- Generate New Character with custom dialogs (Accept/Regenerate flow)
 - Current values enforced to not exceed max values
+- Weapon selection: User prompted to "Select weapon" rather than random assignment
+- Item selector with search functionality and categorized items
+- Item usage markers (3 dots per slot, click to mark usage)
+- Torches/lanterns: 6-use system (each marker can be half-filled for 6 total uses)
+- Depleted items shown with strikethrough when all markers used
+- Two-slot items supported (heavy weapons, heavy armor)
+- Empty slots have disabled usage markers
+- Purse item added to Miscellaneous (holds 250 pips)
+- Dice roller with custom notation support
 
 NPC-SPECIFIC DATA (for GMs, not player characters)
 --------------------------------------------------

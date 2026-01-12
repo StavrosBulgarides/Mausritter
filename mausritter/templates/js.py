@@ -66,178 +66,226 @@ def get_javascript_code() -> str:
             return weapon[0] + ' (' + category.charAt(0).toUpperCase() + category.slice(1) + ', ' + weapon[1] + ')';
         }}
 
+        // Store pending character data for Accept/Regenerate flow
+        let pendingCharacter = null;
+
+        function generateCharacterData() {{
+            // Roll attributes (3d6 keep two highest, per SRD 2.3)
+            const str = rollAttribute();
+            const dex = rollAttribute();
+            const wil = rollAttribute();
+
+            // Roll HP and Pips
+            const hp = Math.floor(Math.random() * 6) + 1;
+            const pips = Math.floor(Math.random() * 6) + 1;
+
+            // Get background
+            const [background, itemA, itemB] = getBackground(hp, pips);
+
+            // Determine additional equipment
+            const highestAttr = Math.max(str, dex, wil);
+            const equipment = ["Torches", "Rations", getRandomWeapon(), itemA, itemB];
+
+            if (highestAttr <= 9) {{
+                const addHp = Math.floor(Math.random() * 6) + 1;
+                const addPips = Math.floor(Math.random() * 6) + 1;
+                const [addBg, addItemA, addItemB] = getBackground(addHp, addPips);
+                equipment.push(addItemA);
+                if (highestAttr <= 7) {{
+                    equipment.push(addItemB);
+                }}
+            }}
+
+            // Generate appearance
+            const birthsignData = randomChoice(BIRTHSIGNS);
+            const birthsign = birthsignData[0];
+            const disposition = birthsignData[1];
+            const coatColor = randomChoice(COAT_COLORS);
+            const coatPattern = randomChoice(COAT_PATTERNS);
+            const detailRoll = rollD66();
+            const physicalDetail = PHYSICAL_DETAILS[detailRoll.toString()];
+
+            // Generate name
+            const firstName = randomChoice(FIRST_NAMES);
+            const lastName = randomChoice(LAST_NAMES);
+            const name = firstName + ' ' + lastName;
+
+            return {{
+                name, str, dex, wil, hp, pips, background,
+                birthsign, disposition, coatColor, coatPattern, physicalDetail,
+                equipment
+            }};
+        }}
+
+        function applyCharacterData(charData) {{
+            // Update name
+            const nameInput = document.querySelector('.name-input');
+            if (nameInput) nameInput.value = charData.name;
+
+            // Update background
+            const backgroundInput = document.querySelector('.background-input');
+            if (backgroundInput) backgroundInput.value = charData.background;
+
+            // Update attributes (STR, DEX, WIL) - each row has max and current inputs
+            const attrRows = document.querySelectorAll('.attribute-row');
+            if (attrRows.length >= 3) {{
+                const attrs = [charData.str, charData.dex, charData.wil];
+                attrRows.forEach((row, index) => {{
+                    const inputs = row.querySelectorAll('input[type="number"]');
+                    if (inputs.length >= 2) {{
+                        inputs[0].value = attrs[index];  // max
+                        inputs[0].max = attrs[index];    // set max attribute on input
+                        inputs[1].value = attrs[index];  // current starts at max
+                        inputs[1].max = attrs[index];    // current can't exceed max
+                    }}
+                }});
+            }}
+
+            // Update HP - row has max and current inputs
+            const hpRow = document.querySelector('.hp-row');
+            if (hpRow) {{
+                const hpInputs = hpRow.querySelectorAll('input[type="number"]');
+                if (hpInputs.length >= 2) {{
+                    hpInputs[0].value = charData.hp;   // max
+                    hpInputs[0].max = charData.hp;     // set max attribute on input
+                    hpInputs[1].value = charData.hp;   // current starts at max
+                    hpInputs[1].max = charData.hp;     // current can't exceed max
+                }}
+            }}
+
+            // Update Pips (only current pips, max is always 250)
+            const pipsInput = document.querySelector('.pips-input');
+            if (pipsInput) pipsInput.value = charData.pips;
+
+            // Update appearance
+            const appearanceRows = document.querySelectorAll('.appearance-row input[type="text"]');
+            if (appearanceRows.length >= 3) {{
+                appearanceRows[0].value = charData.birthsign + ' (' + charData.disposition + ')';
+                appearanceRows[1].value = charData.coatColor + ', ' + charData.coatPattern;
+                appearanceRows[2].value = charData.physicalDetail;
+            }}
+
+            // Helper to format item text with brackets on new line
+            function formatItemText(item) {{
+                if (item.includes('(') && item.includes(')')) {{
+                    const idx = item.indexOf('(');
+                    const name = item.substring(0, idx).trim();
+                    const details = item.substring(idx);
+                    return name + '\\n' + details;
+                }}
+                return item;
+            }}
+
+            // Update inventory slots (now using textareas)
+            const pawSlots = document.querySelectorAll('.paw-grid .slot-content textarea');
+            const bodySlots = document.querySelectorAll('.body-grid .slot-content textarea');
+            const packSlots = document.querySelectorAll('.pack-grid .slot-content textarea');
+
+            // Clear all slots first
+            pawSlots.forEach(slot => slot.value = '');
+            bodySlots.forEach(slot => slot.value = '');
+            packSlots.forEach(slot => slot.value = '');
+
+            // Prompt user to select their weapon
+            if (pawSlots[0]) {{
+                pawSlots[0].value = 'Select weapon';
+                pawSlots[0].classList.add('needs-selection');
+            }}
+
+            // Check if any items are armor for body slots
+            const packItems = [];
+            const armorKeywords = ['armour', 'armor', 'jerkin'];
+            let bodySlotIdx = 0;
+
+            // Process background items (itemA and itemB at indices 3 and 4)
+            [charData.equipment[3], charData.equipment[4]].forEach(item => {{
+                if (item) {{
+                    const isArmor = armorKeywords.some(kw => item.toLowerCase().includes(kw));
+                    const formattedItem = formatItemText(item);
+                    if (isArmor && bodySlotIdx < 2) {{
+                        bodySlots[bodySlotIdx].value = formattedItem;
+                        bodySlotIdx++;
+                    }} else {{
+                        packItems.push(formattedItem);
+                    }}
+                }}
+            }});
+
+            // Add torches, rations to pack
+            packItems.unshift(charData.equipment[1]);  // Rations
+            packItems.unshift(charData.equipment[0]);  // Torches
+
+            // Add additional items from low stats
+            if (charData.equipment[5]) packItems.push(formatItemText(charData.equipment[5]));
+            if (charData.equipment[6]) packItems.push(formatItemText(charData.equipment[6]));
+
+            // Fill pack slots
+            packItems.forEach((item, idx) => {{
+                if (packSlots[idx]) packSlots[idx].value = item;
+            }});
+
+            // Reset level, XP, grit to starting values
+            const levelInput = document.querySelector('.level-box input[type="number"]');
+            const xpInput = document.querySelector('.xp-box input[type="number"]');
+            const gritInput = document.querySelector('.grit-box input[type="number"]');
+            if (levelInput) levelInput.value = 1;
+            if (xpInput) xpInput.value = 0;
+            if (gritInput) gritInput.value = 0;
+
+            // Clear text areas
+            document.querySelectorAll('.portrait-input, .conditions-box textarea, .banked-box textarea').forEach(ta => ta.value = '');
+
+            // Reset usage markers
+            resetUsageMarkers();
+
+            // Update slot empty states
+            updateAllSlotEmptyStates();
+        }}
+
+        function showNewCharacterDialog(charData) {{
+            const body = document.getElementById('newCharacterBody');
+            body.innerHTML = '<strong>' + charData.name + '</strong><br><br>' +
+                'STR: ' + charData.str + ', DEX: ' + charData.dex + ', WIL: ' + charData.wil + '<br>' +
+                'HP: ' + charData.hp + ', Pips: ' + charData.pips + '<br><br>' +
+                'Background: ' + charData.background;
+            document.getElementById('newCharacterModal').classList.add('active');
+        }}
+
         function generateNewCharacter() {{
+            document.getElementById('confirmGenerateModal').classList.add('active');
+        }}
+
+        function closeConfirmGenerate() {{
+            document.getElementById('confirmGenerateModal').classList.remove('active');
+        }}
+
+        function confirmGenerate() {{
+            document.getElementById('confirmGenerateModal').classList.remove('active');
             try {{
-                if (!confirm('Generate a new character? This will replace all current character data.')) {{
-                    return;
-                }}
-
-                // Roll attributes (3d6 keep two highest, per SRD 2.3)
-                const str = rollAttribute();
-                const dex = rollAttribute();
-                const wil = rollAttribute();
-
-                // Roll HP and Pips
-                const hp = Math.floor(Math.random() * 6) + 1;
-                const pips = Math.floor(Math.random() * 6) + 1;
-
-                // Get background
-                const [background, itemA, itemB] = getBackground(hp, pips);
-
-                // Determine additional equipment
-                const highestAttr = Math.max(str, dex, wil);
-                const equipment = ["Torches", "Rations", getRandomWeapon(), itemA, itemB];
-
-                if (highestAttr <= 9) {{
-                    const addHp = Math.floor(Math.random() * 6) + 1;
-                    const addPips = Math.floor(Math.random() * 6) + 1;
-                    const [addBg, addItemA, addItemB] = getBackground(addHp, addPips);
-                    equipment.push(addItemA);
-                    if (highestAttr <= 7) {{
-                        equipment.push(addItemB);
-                    }}
-                }}
-
-                // Generate appearance
-                const birthsignData = randomChoice(BIRTHSIGNS);
-                const birthsign = birthsignData[0];
-                const disposition = birthsignData[1];
-                const coatColor = randomChoice(COAT_COLORS);
-                const coatPattern = randomChoice(COAT_PATTERNS);
-                const detailRoll = rollD66();
-                const physicalDetail = PHYSICAL_DETAILS[detailRoll.toString()];
-
-                // Generate name
-                const firstName = randomChoice(FIRST_NAMES);
-                const lastName = randomChoice(LAST_NAMES);
-                const name = firstName + ' ' + lastName;
-
-                // Update name
-                const nameInput = document.querySelector('.name-input');
-                if (nameInput) nameInput.value = name;
-
-                // Update background
-                const backgroundInput = document.querySelector('.background-input');
-                if (backgroundInput) backgroundInput.value = background;
-
-                // Update attributes (STR, DEX, WIL) - each row has max and current inputs
-                const attrRows = document.querySelectorAll('.attribute-row');
-                if (attrRows.length >= 3) {{
-                    const attrs = [str, dex, wil];
-                    attrRows.forEach((row, index) => {{
-                        const inputs = row.querySelectorAll('input[type="number"]');
-                        if (inputs.length >= 2) {{
-                            inputs[0].value = attrs[index];  // max
-                            inputs[0].max = attrs[index];    // set max attribute on input
-                            inputs[1].value = attrs[index];  // current starts at max
-                            inputs[1].max = attrs[index];    // current can't exceed max
-                        }}
-                    }});
-                }}
-
-                // Update HP - row has max and current inputs
-                const hpRow = document.querySelector('.hp-row');
-                if (hpRow) {{
-                    const hpInputs = hpRow.querySelectorAll('input[type="number"]');
-                    if (hpInputs.length >= 2) {{
-                        hpInputs[0].value = hp;   // max
-                        hpInputs[0].max = hp;     // set max attribute on input
-                        hpInputs[1].value = hp;   // current starts at max
-                        hpInputs[1].max = hp;     // current can't exceed max
-                    }}
-                }}
-
-                // Update Pips
-                const pipsInput = document.querySelector('.pips-input');
-                const pipsTotalInput = document.querySelector('.pips-total-input');
-                if (pipsInput) pipsInput.value = pips;
-                if (pipsTotalInput) pipsTotalInput.value = pips;
-
-                // Update appearance
-                const appearanceRows = document.querySelectorAll('.appearance-row input[type="text"]');
-                if (appearanceRows.length >= 3) {{
-                    appearanceRows[0].value = birthsign + ' (' + disposition + ')';
-                    appearanceRows[1].value = coatColor + ', ' + coatPattern;
-                    appearanceRows[2].value = physicalDetail;
-                }}
-
-                // Helper to format item text with brackets on new line
-                function formatItemText(item) {{
-                    if (item.includes('(') && item.includes(')')) {{
-                        const idx = item.indexOf('(');
-                        const name = item.substring(0, idx).trim();
-                        const details = item.substring(idx);
-                        return name + '\\n' + details;
-                    }}
-                    return item;
-                }}
-
-                // Update inventory slots (now using textareas)
-                // New structure: paw-grid (main_paw, off_paw), body-grid (body[0], body[1]), pack-grid (1-6)
-                const pawSlots = document.querySelectorAll('.paw-grid .slot-content textarea');
-                const bodySlots = document.querySelectorAll('.body-grid .slot-content textarea');
-                const packSlots = document.querySelectorAll('.pack-grid .slot-content textarea');
-
-                // Clear all slots first
-                pawSlots.forEach(slot => slot.value = '');
-                bodySlots.forEach(slot => slot.value = '');
-                packSlots.forEach(slot => slot.value = '');
-
-                // Weapon goes to main paw (or off paw for heavy)
-                const formattedWeapon = formatItemText(equipment[2]);
-                if (pawSlots[0]) pawSlots[0].value = formattedWeapon;
-
-                // Check if any items are armor for body slots
-                const packItems = [];
-                const armorKeywords = ['armour', 'armor', 'jerkin'];
-                let bodySlotIdx = 0;
-
-                // Process background items (itemA and itemB at indices 3 and 4)
-                [equipment[3], equipment[4]].forEach(item => {{
-                    if (item) {{
-                        const isArmor = armorKeywords.some(kw => item.toLowerCase().includes(kw));
-                        const formattedItem = formatItemText(item);
-                        if (isArmor && bodySlotIdx < 2) {{
-                            bodySlots[bodySlotIdx].value = formattedItem;
-                            bodySlotIdx++;
-                        }} else {{
-                            packItems.push(formattedItem);
-                        }}
-                    }}
-                }});
-
-                // Add torches, rations to pack
-                packItems.unshift(equipment[1]);  // Rations
-                packItems.unshift(equipment[0]);  // Torches
-
-                // Add additional items from low stats
-                if (equipment[5]) packItems.push(formatItemText(equipment[5]));
-                if (equipment[6]) packItems.push(formatItemText(equipment[6]));
-
-                // Fill pack slots
-                packItems.forEach((item, idx) => {{
-                    if (packSlots[idx]) packSlots[idx].value = item;
-                }});
-
-                // Reset level, XP, grit to starting values
-                const levelInput = document.querySelector('.level-box input[type="number"]');
-                const xpInput = document.querySelector('.xp-box input[type="number"]');
-                const gritInput = document.querySelector('.grit-box input[type="number"]');
-                if (levelInput) levelInput.value = 1;
-                if (xpInput) xpInput.value = 0;
-                if (gritInput) gritInput.value = 0;
-
-                // Clear text areas
-                document.querySelectorAll('.portrait-input, .conditions-box textarea, .banked-box textarea').forEach(ta => ta.value = '');
-
-                // Reset usage markers
-                resetUsageMarkers();
-
-                alert('New character generated: ' + name + '\\nSTR: ' + str + ', DEX: ' + dex + ', WIL: ' + wil + '\\nHP: ' + hp + ', Pips: ' + pips + '\\nBackground: ' + background);
+                pendingCharacter = generateCharacterData();
+                showNewCharacterDialog(pendingCharacter);
             }} catch (error) {{
                 console.error('Error generating character:', error);
                 alert('Error generating character. Please check the browser console for details.');
             }}
+        }}
+
+        function regenerateCharacter() {{
+            try {{
+                pendingCharacter = generateCharacterData();
+                showNewCharacterDialog(pendingCharacter);
+            }} catch (error) {{
+                console.error('Error regenerating character:', error);
+                alert('Error regenerating character. Please check the browser console for details.');
+            }}
+        }}
+
+        function acceptCharacter() {{
+            if (pendingCharacter) {{
+                applyCharacterData(pendingCharacter);
+                pendingCharacter = null;
+            }}
+            document.getElementById('newCharacterModal').classList.remove('active');
         }}
 
         function toggleDiceRoller() {{
@@ -346,8 +394,32 @@ def get_javascript_code() -> str:
             return content.includes('torch') || content.includes('lantern');
         }}
 
+        function updateSlotEmptyState(slot) {{
+            const textarea = slot.querySelector('.slot-content textarea');
+            if (!textarea) return;
+            const isEmpty = !textarea.value.trim() || textarea.value.trim() === 'Select weapon';
+            if (isEmpty) {{
+                slot.classList.add('slot-empty');
+            }} else {{
+                slot.classList.remove('slot-empty');
+            }}
+        }}
+
+        function updateAllSlotEmptyStates() {{
+            document.querySelectorAll('.inventory-slot').forEach(slot => {{
+                updateSlotEmptyState(slot);
+            }});
+        }}
+
         function toggleUsage(marker) {{
             const slot = marker.closest('.inventory-slot');
+            const textarea = slot.querySelector('.slot-content textarea');
+
+            // Don't allow marking empty slots or "Select weapon" placeholder
+            if (!textarea || !textarea.value.trim() || textarea.value.trim() === 'Select weapon') {{
+                return;
+            }}
+
             const markers = Array.from(slot.querySelectorAll('.usage-marker'));
             const isSixUseItem = isTorchOrLantern(slot);
 
@@ -356,31 +428,17 @@ def get_javascript_code() -> str:
             const clickedIsUsed = marker.classList.contains('used') || marker.classList.contains('half-used');
 
             if (isSixUseItem) {{
-                // 6-use items: each marker has half-used and fully-used states
-                if (clickedIsUsed) {{
-                    // Unfill: from right to left, full→half→empty
-                    for (let i = markers.length - 1; i >= 0; i--) {{
-                        if (markers[i].classList.contains('used')) {{
-                            markers[i].classList.remove('used');
-                            markers[i].classList.add('half-used');
-                            break;
-                        }} else if (markers[i].classList.contains('half-used')) {{
-                            markers[i].classList.remove('half-used');
-                            break;
-                        }}
-                    }}
+                // 6-use items: each marker cycles through empty → half → full → empty
+                if (marker.classList.contains('used')) {{
+                    // Full → Empty
+                    marker.classList.remove('used');
+                }} else if (marker.classList.contains('half-used')) {{
+                    // Half → Full
+                    marker.classList.remove('half-used');
+                    marker.classList.add('used');
                 }} else {{
-                    // Fill: from left to right, empty→half→full
-                    for (let i = 0; i < markers.length; i++) {{
-                        if (!markers[i].classList.contains('used') && !markers[i].classList.contains('half-used')) {{
-                            markers[i].classList.add('half-used');
-                            break;
-                        }} else if (markers[i].classList.contains('half-used')) {{
-                            markers[i].classList.remove('half-used');
-                            markers[i].classList.add('used');
-                            break;
-                        }}
-                    }}
+                    // Empty → Half
+                    marker.classList.add('half-used');
                 }}
                 // Check if all markers are fully used (depleted)
                 const allFullyUsed = markers.every(m => m.classList.contains('used'));
@@ -548,7 +606,11 @@ def get_javascript_code() -> str:
                 const textarea = currentTargetSlot.querySelector('.slot-content textarea');
                 if (textarea) {{
                     textarea.value = itemText;
+                    textarea.classList.remove('needs-selection');
                 }}
+
+                // Update slot empty state
+                updateSlotEmptyState(currentTargetSlot);
 
                 // Reset usage markers for this slot
                 const markers = currentTargetSlot.querySelectorAll('.usage-marker');
@@ -608,7 +670,10 @@ def get_javascript_code() -> str:
             const textarea = slot.querySelector('.slot-content textarea');
             if (textarea) {{
                 textarea.value = '';
+                textarea.classList.remove('needs-selection');
             }}
+            // Update slot empty state
+            updateSlotEmptyState(slot);
             // Reset usage markers
             const markers = slot.querySelectorAll('.usage-marker');
             markers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
@@ -658,6 +723,10 @@ def get_javascript_code() -> str:
 
         // Make functions globally accessible
         window.generateNewCharacter = generateNewCharacter;
+        window.closeConfirmGenerate = closeConfirmGenerate;
+        window.confirmGenerate = confirmGenerate;
+        window.regenerateCharacter = regenerateCharacter;
+        window.acceptCharacter = acceptCharacter;
         window.toggleDiceRoller = toggleDiceRoller;
         window.rollDice = rollDice;
         window.toggleUsage = toggleUsage;
@@ -682,6 +751,15 @@ def get_javascript_code() -> str:
             }}
 
             // Dice roller uses inline onclick="toggleDiceRoller()"
+
+            // Initialize slot empty states and add listeners for manual edits
+            updateAllSlotEmptyStates();
+            document.querySelectorAll('.inventory-slot .slot-content textarea').forEach(textarea => {{
+                textarea.addEventListener('input', function() {{
+                    const slot = this.closest('.inventory-slot');
+                    updateSlotEmptyState(slot);
+                }});
+            }});
 
             // Enforce max values on current inputs for attributes
             const attrRows = document.querySelectorAll('.attribute-row');
@@ -739,20 +817,13 @@ def get_javascript_code() -> str:
                 }}
             }}
 
-            // Enforce pips can't exceed total
+            // Enforce pips limits (max 250)
             const pipsInput = document.querySelector('.pips-input');
-            const pipsTotalInput = document.querySelector('.pips-total-input');
-            if (pipsInput && pipsTotalInput) {{
-                pipsTotalInput.addEventListener('change', function() {{
-                    if (parseInt(pipsInput.value) > parseInt(this.value)) {{
-                        pipsInput.value = this.value;
-                    }}
-                }});
-
+            const MAX_PIPS = 250;
+            if (pipsInput) {{
                 pipsInput.addEventListener('change', function() {{
-                    const maxVal = parseInt(pipsTotalInput.value);
-                    if (parseInt(this.value) > maxVal) {{
-                        this.value = maxVal;
+                    if (parseInt(this.value) > MAX_PIPS) {{
+                        this.value = MAX_PIPS;
                     }}
                     if (parseInt(this.value) < 0) {{
                         this.value = 0;

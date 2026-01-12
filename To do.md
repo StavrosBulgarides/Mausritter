@@ -1,24 +1,10 @@
 # Things that I'm planning to do
 
-## General
-1) New character generation menu should offer the choice of sticking with the generated character, creating a new one, or reverting to the previous one.
-
 ## Attributes
 1) Characters can swap any two attributes. Easiest way is to allow max to go up/down
 
-## Starting
-1) Your mouse starts with:
-- A **weapon** of your choice -- Don't include one by default, instead 'Choose weapon'
-2) Improvised
-
-## Pips
-1) Generation doesn't work correctly. D6
-2) Remove max and current pips. Only 250 pips can be carried without a purse, so the max is always 250.
-3) A purse to caary pips requires one inventory slot per 250, barring the first 250, which are carried in your mouse’s pockets. These arent currently included in the inventory list.
-
 ## Inventory
-1) Fix torch and lantern 6 use logic. Clicking on a half item should add another half first with a second click removing
-2) Improvised weapon slots - row 266
+1)Improvised weapon slots - row 266
 
 ## Conditions
 1) Implement conditions in the inventory list (search)- they are included as items affecting the inventory
