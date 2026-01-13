@@ -1,34 +1,42 @@
 # Things that I'm planning to do
 
-## Attributes
-1) Characters can swap any two attributes. Easiest way is to allow max to go up/down
-
 ## Inventory
-1)Improvised weapon slots - row 266
+1) Improvised weapon slots - row 266
 
-## Conditions
-1) Implement conditions in the inventory list (search)- they are included as items affecting the inventory
-2) List clear requirement in search
-3) For each point of Grit you have, you may place one Condition into the Grit space on your character sheet. Once placed into the Grit space, a Condition cannot be removed until cleared. Preuambly reduces remaining grit.
+## Weapons
+1) Select weapon background should be red.
 
-### Conditions
-Conditions are **negative effects** suffered by your mouse. Each Condition must be placed in an **inventory slot**. Mice may have multiple copies of the same condition. Some Conditions have additional effects, which apply as long as the Condition remains in your inventory. Conditions can only be **removed** by meeting their **clear** requirement—usually a short, long or full rest.
+## Hirelings
+1) Number hirelings as they are created #1, #2 etc
+2) Sort out inventory alignment
+3) Some backgrounds provide hirelings. Create those hirelings automatically where they are shown:
+- Loyal beetle (Beetleherd background)
+- Drunken torchbearer (Ale brewer background)
+- Pack rat (Merchant background)
+
+## Warbands
+1) Include in the same section as Hirelings? Review rules to see if they are equivalent.
+
+# Global options - Implement overarching options that affect relevant stats in one go.
+1) Rest to clear relevant conditions
+2) Rest to recover HP if lost
+etc. 
 
 ## Dice roller
-1) Relevant success rolls. e.g., against strength. Icon against each one?
+1) Relevant success rolls. e.g., against strength. Move dice icon to apply against relevant checks. Show success/fail
 2) Weapon attack similar
-3) General dice roller needed? After a roll compare the result to the condition and mark the roll as successful or not
+3) Retain General dice roller but make it roll the check selected. The player can then look at the dice making up the result if they want (i) icon against the result takes the user to the dice section.
 
 ## Hit protection and damage
 1) Implement
 
 ## Spells
-1) Inventory - add as items
-2) Impact (Exhausted, Frightened, Hungry, Injured, Drained, Freeform)
+1) Some backgrounds provide spells, but spell mechanics are not included:
+- Spells provided: Magic Missile, Be Understood, Heal, Restore, Darkness
+- Not implemented: Spell casting rules, spell dice, mishaps, dooms
+- Spell recharge mechanics not shown
+2) Impact of conditions (Exhausted, Frightened, Hungry, Injured, Drained, Freeform)
 
-## Hirelings
-1) Implement hireling character sheets. Nest these?
-2) Add an option to add hirelings (per character) - Player option. Rules review
 
 ## General Rule review
 1) Look for rule exceptions not catered for by the current implementation
@@ -40,7 +48,6 @@ Conditions are **negative effects** suffered by your mouse. Each Condition must 
 4) GM only notes
 
 ### High-level approach
-
 Create a small local web server: Python backend (Flask)
 One server runs on the GM’s machine
 Players connect via browser over LAN

@@ -19,6 +19,19 @@ def get_javascript_code() -> str:
         const LAST_NAMES = {json.dumps(data["LAST_NAMES"])};
         const WEAPONS = {json.dumps(data["WEAPONS"])};
         const INVENTORY_ITEMS = {json.dumps(data["INVENTORY_ITEMS"])};
+        const HIRELING_LOOKS = {json.dumps(data["HIRELING_LOOKS"])};
+        const HIRELING_DISPOSITIONS = {json.dumps(data["HIRELING_DISPOSITIONS"])};
+        const HIRELING_TYPES = {json.dumps(data["HIRELING_TYPES"])};
+
+        // Condition clearing requirements lookup
+        const CONDITION_CLEAR = {{
+            'Exhausted': 'Clear: Rest a night in camp',
+            'Frightened': 'Clear: A moment\\'s rest in a safe place',
+            'Hungry': 'Clear: Eat a fresh ration',
+            'Injured': 'Clear: Heal 1 STR at full rest',
+            'Poisoned': 'Clear: Antidote, healer\\'s care, or rest in a safe settlement',
+            'Stunned': 'Clear: A moment\\'s rest in a safe place'
+        }};
 
         function rollDiceSum(numDice, sides) {{
             let total = 0;
@@ -227,13 +240,20 @@ def get_javascript_code() -> str:
             // Reset level, XP, grit to starting values
             const levelInput = document.querySelector('.level-box input[type="number"]');
             const xpInput = document.querySelector('.xp-box input[type="number"]');
-            const gritInput = document.querySelector('.grit-box input[type="number"]');
+            const gritInput = document.querySelector('.grit-input');
             if (levelInput) levelInput.value = 1;
             if (xpInput) xpInput.value = 0;
-            if (gritInput) gritInput.value = 0;
+            if (gritInput) {{
+                gritInput.value = 0;
+                gritInput.dataset.maxGrit = 0;
+            }}
+
+            // Clear ignored conditions
+            const ignoredConditionsList = document.querySelector('.ignored-conditions-list');
+            if (ignoredConditionsList) ignoredConditionsList.innerHTML = '';
 
             // Clear text areas
-            document.querySelectorAll('.portrait-input, .conditions-box textarea, .banked-box textarea').forEach(ta => ta.value = '');
+            document.querySelectorAll('.portrait-input, .banked-box textarea').forEach(ta => ta.value = '');
 
             // Reset usage markers
             resetUsageMarkers();
@@ -291,6 +311,24 @@ def get_javascript_code() -> str:
         function toggleDiceRoller() {{
             const content = document.getElementById('diceContent');
             const toggle = document.getElementById('diceToggle');
+            if (content && toggle) {{
+                content.classList.toggle('active');
+                toggle.textContent = content.classList.contains('active') ? '▲' : '▼';
+            }}
+        }}
+
+        function toggleInventory() {{
+            const content = document.getElementById('inventoryContent');
+            const toggle = document.getElementById('inventoryToggle');
+            if (content && toggle) {{
+                content.classList.toggle('active');
+                toggle.textContent = content.classList.contains('active') ? '▲' : '▼';
+            }}
+        }}
+
+        function toggleSection(sectionName) {{
+            const content = document.getElementById(sectionName + 'Content');
+            const toggle = document.getElementById(sectionName + 'Toggle');
             if (content && toggle) {{
                 content.classList.toggle('active');
                 toggle.textContent = content.classList.contains('active') ? '▲' : '▼';
@@ -509,6 +547,8 @@ def get_javascript_code() -> str:
 
         // Item selector state
         let currentTargetSlot = null;
+        let currentHirelingSlot = null;
+        let hirelingCounter = 0;
 
         function openItemSelector(button) {{
             // Find the inventory-slot that contains this button
@@ -541,6 +581,10 @@ def get_javascript_code() -> str:
 
                 const categoryDiv = document.createElement('div');
                 categoryDiv.className = 'item-category';
+                // Add special class for Conditions category
+                if (category === 'Conditions') {{
+                    categoryDiv.classList.add('conditions-category');
+                }}
 
                 const header = document.createElement('div');
                 header.className = 'item-category-header';
@@ -593,6 +637,12 @@ def get_javascript_code() -> str:
         }}
 
         function selectItem(itemName, slots) {{
+            // Check if this is for a hireling slot
+            if (currentHirelingSlot) {{
+                selectHirelingItem(itemName, slots);
+                return;
+            }}
+
             if (currentTargetSlot) {{
                 // Format item text
                 let itemText = itemName;
@@ -618,6 +668,21 @@ def get_javascript_code() -> str:
                 currentTargetSlot.classList.remove('depleted');
                 currentTargetSlot.classList.remove('two-slot-item');
                 currentTargetSlot.classList.remove('two-slot-secondary');
+                currentTargetSlot.classList.remove('condition-slot');
+
+                // Remove any existing condition clear text
+                const existingClear = currentTargetSlot.querySelector('.condition-clear');
+                if (existingClear) existingClear.remove();
+
+                // Check if this is a condition and apply special styling
+                if (CONDITION_CLEAR[itemName]) {{
+                    currentTargetSlot.classList.add('condition-slot');
+                    // Add the clearing condition text
+                    const clearDiv = document.createElement('div');
+                    clearDiv.className = 'condition-clear';
+                    clearDiv.textContent = CONDITION_CLEAR[itemName];
+                    currentTargetSlot.querySelector('.slot-content').appendChild(clearDiv);
+                }}
 
                 // Handle 2-slot items
                 if (slots === 2) {{
@@ -679,6 +744,11 @@ def get_javascript_code() -> str:
             markers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
             slot.classList.remove('depleted');
 
+            // Remove condition styling
+            slot.classList.remove('condition-slot');
+            const conditionClear = slot.querySelector('.condition-clear');
+            if (conditionClear) conditionClear.remove();
+
             // Check if this is part of a two-slot item and clear the paired slot
             const parentGrid = slot.parentElement;
             const isTwoSlot = slot.classList.contains('two-slot-item') || slot.classList.contains('two-slot-secondary');
@@ -721,6 +791,527 @@ def get_javascript_code() -> str:
             slot.classList.remove('two-slot-secondary');
         }}
 
+        // Grit alert modal functions
+        function showGritAlert(message) {{
+            document.getElementById('gritAlertBody').textContent = message;
+            document.getElementById('gritAlertModal').classList.add('active');
+        }}
+
+        function closeGritAlert() {{
+            document.getElementById('gritAlertModal').classList.remove('active');
+        }}
+
+        // Ignored conditions functionality
+        let ignoredConditionMode = false;
+
+        function addIgnoredCondition(button) {{
+            // Check if available grit is > 0
+            const gritInput = document.querySelector('.grit-input');
+            const availableGrit = parseInt(gritInput.value) || 0;
+
+            if (availableGrit <= 0) {{
+                showGritAlert('No Grit remaining to ignore conditions.');
+                return;
+            }}
+
+            // Set mode to ignored conditions
+            ignoredConditionMode = true;
+
+            // Build conditions-only list
+            buildConditionsOnlyList();
+
+            // Show the modal
+            document.getElementById('itemSelectorModal').classList.add('active');
+            document.getElementById('itemSearchInput').value = '';
+            document.getElementById('itemSearchInput').focus();
+        }}
+
+        function buildConditionsOnlyList() {{
+            const body = document.getElementById('itemSelectorBody');
+            body.innerHTML = '';
+
+            const conditions = INVENTORY_ITEMS['Conditions'];
+            if (!conditions) return;
+
+            const categoryDiv = document.createElement('div');
+            categoryDiv.className = 'item-category conditions-category';
+
+            const header = document.createElement('div');
+            header.className = 'item-category-header';
+            header.textContent = 'Conditions';
+            header.onclick = function() {{
+                const itemsDiv = this.nextElementSibling;
+                itemsDiv.classList.toggle('expanded');
+            }};
+
+            const itemsDiv = document.createElement('div');
+            itemsDiv.className = 'item-category-items expanded'; // Auto-expanded
+
+            conditions.forEach(item => {{
+                const itemOption = document.createElement('div');
+                itemOption.className = 'item-option';
+
+                const itemName = document.createElement('span');
+                itemName.className = 'item-name';
+                itemName.textContent = item.name;
+
+                const itemDetails = document.createElement('span');
+                itemDetails.className = 'item-details';
+                itemDetails.textContent = item.notes || '';
+
+                itemOption.appendChild(itemName);
+                itemOption.appendChild(itemDetails);
+                itemOption.onclick = function() {{
+                    selectIgnoredCondition(item.name);
+                }};
+                itemsDiv.appendChild(itemOption);
+            }});
+
+            categoryDiv.appendChild(header);
+            categoryDiv.appendChild(itemsDiv);
+            body.appendChild(categoryDiv);
+        }}
+
+        function selectIgnoredCondition(conditionName) {{
+            // Get grit input
+            const gritInput = document.querySelector('.grit-input');
+            const availableGrit = parseInt(gritInput.value) || 0;
+
+            if (availableGrit <= 0) {{
+                showGritAlert('No Grit remaining to ignore conditions.');
+                closeItemSelector();
+                return;
+            }}
+
+            // Reduce available grit by 1
+            gritInput.value = availableGrit - 1;
+
+            // Get the conditions list
+            const conditionsList = document.querySelector('.ignored-conditions-list');
+
+            // Create the condition row
+            const row = document.createElement('div');
+            row.className = 'ignored-condition-row';
+            row.dataset.condition = conditionName;
+
+            const removeBtn = document.createElement('button');
+            removeBtn.className = 'slot-btn clear-btn';
+            removeBtn.textContent = '-';
+            removeBtn.onclick = function() {{
+                removeIgnoredCondition(this);
+            }};
+
+            const content = document.createElement('div');
+            content.className = 'ignored-condition-content';
+
+            const nameSpan = document.createElement('span');
+            nameSpan.className = 'ignored-condition-name';
+            nameSpan.textContent = conditionName;
+
+            const clearSpan = document.createElement('span');
+            clearSpan.className = 'ignored-condition-clear';
+            clearSpan.textContent = CONDITION_CLEAR[conditionName] || '';
+
+            content.appendChild(nameSpan);
+            content.appendChild(clearSpan);
+
+            row.appendChild(removeBtn);
+            row.appendChild(content);
+
+            conditionsList.appendChild(row);
+
+            // Close the modal
+            closeItemSelector();
+            ignoredConditionMode = false;
+        }}
+
+        function removeIgnoredCondition(button) {{
+            const row = button.closest('.ignored-condition-row');
+
+            // Restore grit
+            const gritInput = document.querySelector('.grit-input');
+            const availableGrit = parseInt(gritInput.value) || 0;
+            const maxGrit = parseInt(gritInput.dataset.maxGrit) || 0;
+
+            // Don't exceed max grit
+            if (availableGrit < maxGrit) {{
+                gritInput.value = availableGrit + 1;
+            }}
+
+            // Remove the row
+            row.remove();
+        }}
+
+        // Override closeItemSelector to reset mode
+        const originalCloseItemSelector = closeItemSelector;
+        function closeItemSelectorWithReset() {{
+            document.getElementById('itemSelectorModal').classList.remove('active');
+            currentTargetSlot = null;
+            currentHirelingSlot = null;
+            ignoredConditionMode = false;
+        }}
+
+        // ==================== HIRELING FUNCTIONS ====================
+
+        function generateHirelingStats() {{
+            // Per SRD 2.3: d6 hp, STR 2d6, DEX 2d6, WIL 2d6
+            return {{
+                hp: Math.floor(Math.random() * 6) + 1,
+                str: rollDiceSum(2, 6),
+                dex: rollDiceSum(2, 6),
+                wil: rollDiceSum(2, 6),
+                look: randomChoice(HIRELING_LOOKS),
+                disposition: randomChoice(HIRELING_DISPOSITIONS)
+            }};
+        }}
+
+        function createHirelingSlotHTML(hirelingId, slotNum, label, slotType) {{
+            return `
+                <div class="hireling-inventory-slot hireling-${{slotType}}-slot" data-hireling-id="${{hirelingId}}" data-slot="${{slotNum}}" data-slot-type="${{slotType}}">
+                    <div class="hireling-slot-header">
+                        <span class="hireling-slot-label">${{label}}</span>
+                        <span class="hireling-slot-actions">
+                            <button class="slot-btn add-btn" onclick="openHirelingItemSelector(this)">+</button>
+                            <button class="slot-btn clear-btn" onclick="clearHirelingSlot(this)">-</button>
+                        </span>
+                    </div>
+                    <div class="hireling-slot-content">
+                        <textarea placeholder=""></textarea>
+                    </div>
+                    <div class="hireling-usage-markers">
+                        <span class="usage-marker" onclick="toggleHirelingUsage(this)"></span>
+                        <span class="usage-marker" onclick="toggleHirelingUsage(this)"></span>
+                        <span class="usage-marker" onclick="toggleHirelingUsage(this)"></span>
+                    </div>
+                </div>
+            `;
+        }}
+
+        function createHirelingCardHTML(hirelingId, stats) {{
+            return `
+                <div class="hireling-card" id="hireling-${{hirelingId}}" data-hireling-id="${{hirelingId}}">
+                    <div class="hireling-card-header">
+                        <span class="hireling-title">Hireling</span>
+                        <button class="hireling-remove-btn" onclick="removeHireling(${{hirelingId}})">-</button>
+                    </div>
+                    <div class="hireling-info-row">
+                        <div class="hireling-field">
+                            <span class="hireling-field-label">Look</span>
+                            <input type="text" value="${{stats.look}}" />
+                        </div>
+                        <div class="hireling-field">
+                            <span class="hireling-field-label">Disposition</span>
+                            <input type="text" value="${{stats.disposition}}" />
+                        </div>
+                    </div>
+                    <div class="hireling-body">
+                        <div class="hireling-stats">
+                            <div class="hireling-stats-header">
+                                <span></span>
+                                <span>Max</span>
+                                <span>Current</span>
+                            </div>
+                            <div class="hireling-stats-table">
+                                <div class="hireling-stat-row">
+                                    <span class="hireling-stat-label">STR</span>
+                                    <input type="number" value="${{stats.str}}" min="1" max="12" />
+                                    <input type="number" value="${{stats.str}}" min="0" max="12" />
+                                </div>
+                                <div class="hireling-stat-row">
+                                    <span class="hireling-stat-label">DEX</span>
+                                    <input type="number" value="${{stats.dex}}" min="1" max="12" />
+                                    <input type="number" value="${{stats.dex}}" min="0" max="12" />
+                                </div>
+                                <div class="hireling-stat-row">
+                                    <span class="hireling-stat-label">WIL</span>
+                                    <input type="number" value="${{stats.wil}}" min="1" max="12" />
+                                    <input type="number" value="${{stats.wil}}" min="0" max="12" />
+                                </div>
+                                <div class="hireling-stat-row">
+                                    <span class="hireling-stat-label">HP</span>
+                                    <input type="number" value="${{stats.hp}}" min="1" max="20" />
+                                    <input type="number" value="${{stats.hp}}" min="0" max="20" />
+                                </div>
+                            </div>
+                        </div>
+                        <div class="hireling-inventory">
+                            <div class="hireling-paw-column">
+                                <div class="hireling-paw-grid">
+                                    ${{createHirelingSlotHTML(hirelingId, 1, 'Main paw', 'paw')}}
+                                    ${{createHirelingSlotHTML(hirelingId, 2, 'Off paw', 'paw')}}
+                                </div>
+                            </div>
+                            <div class="hireling-pack-column">
+                                <div class="hireling-pack-grid">
+                                    ${{createHirelingSlotHTML(hirelingId, 3, '1', 'pack')}}
+                                    ${{createHirelingSlotHTML(hirelingId, 4, '2', 'pack')}}
+                                    ${{createHirelingSlotHTML(hirelingId, 5, '3', 'pack')}}
+                                    ${{createHirelingSlotHTML(hirelingId, 6, '4', 'pack')}}
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }}
+
+        function addHireling() {{
+            hirelingCounter++;
+            const stats = generateHirelingStats();
+            const cardHTML = createHirelingCardHTML(hirelingCounter, stats);
+
+            const container = document.getElementById('hirelingsContainer');
+            container.insertAdjacentHTML('beforeend', cardHTML);
+
+            // Add event listeners for the new hireling's stat inputs
+            const hirelingCard = document.getElementById('hireling-' + hirelingCounter);
+            setupHirelingStatListeners(hirelingCard);
+        }}
+
+        function removeHireling(hirelingId) {{
+            const card = document.getElementById('hireling-' + hirelingId);
+            if (card) {{
+                card.remove();
+            }}
+        }}
+
+        function setupHirelingStatListeners(hirelingCard) {{
+            // Set up max/current enforcement for hireling stats
+            const statRows = hirelingCard.querySelectorAll('.hireling-stat-row');
+            statRows.forEach(row => {{
+                const inputs = row.querySelectorAll('input[type="number"]');
+                if (inputs.length >= 2) {{
+                    const maxInput = inputs[0];
+                    const currentInput = inputs[1];
+
+                    maxInput.addEventListener('change', function() {{
+                        currentInput.max = this.value;
+                        if (parseInt(currentInput.value) > parseInt(this.value)) {{
+                            currentInput.value = this.value;
+                        }}
+                    }});
+
+                    currentInput.addEventListener('change', function() {{
+                        const maxVal = parseInt(maxInput.value);
+                        if (parseInt(this.value) > maxVal) {{
+                            this.value = maxVal;
+                        }}
+                        if (parseInt(this.value) < 0) {{
+                            this.value = 0;
+                        }}
+                    }});
+                }}
+            }});
+        }}
+
+        function openHirelingItemSelector(button) {{
+            currentHirelingSlot = button.closest('.hireling-inventory-slot');
+
+            // Clear search and build item list
+            const searchInput = document.getElementById('itemSearchInput');
+            searchInput.value = '';
+            buildItemList('');
+
+            // Show modal
+            document.getElementById('itemSelectorModal').classList.add('active');
+            searchInput.focus();
+        }}
+
+        function getHirelingPairedSlotNum(slotNum) {{
+            // Paw slots 1-2 pair together
+            // Pack slots pair vertically in 2x2 grid: 3-5, 4-6
+            if (slotNum <= 2) {{
+                return slotNum === 1 ? 2 : 1;
+            }} else {{
+                // Pack grid: top row (3,4) pairs with bottom row (5,6)
+                return slotNum <= 4 ? slotNum + 2 : slotNum - 2;
+            }}
+        }}
+
+        function clearHirelingSlot(button) {{
+            const slot = button.closest('.hireling-inventory-slot');
+            const textarea = slot.querySelector('.hireling-slot-content textarea');
+            if (textarea) {{
+                textarea.value = '';
+            }}
+
+            // Reset usage markers
+            const markers = slot.querySelectorAll('.usage-marker');
+            markers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
+            slot.classList.remove('depleted');
+
+            // Remove condition styling
+            slot.classList.remove('condition-slot');
+            const conditionClear = slot.querySelector('.condition-clear');
+            if (conditionClear) conditionClear.remove();
+
+            // Handle two-slot items
+            const isTwoSlot = slot.classList.contains('two-slot-item') || slot.classList.contains('two-slot-secondary');
+            if (isTwoSlot) {{
+                const hirelingCard = slot.closest('.hireling-card');
+                const slotNum = parseInt(slot.dataset.slot);
+                const pairedSlotNum = getHirelingPairedSlotNum(slotNum);
+
+                const pairedSlot = hirelingCard.querySelector(`.hireling-inventory-slot[data-slot="${{pairedSlotNum}}"]`);
+                if (pairedSlot) {{
+                    const pairedTextarea = pairedSlot.querySelector('.hireling-slot-content textarea');
+                    if (pairedTextarea) {{
+                        pairedTextarea.value = '';
+                        pairedTextarea.readOnly = false;
+                    }}
+                    const pairedMarkers = pairedSlot.querySelectorAll('.usage-marker');
+                    pairedMarkers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
+                    pairedSlot.classList.remove('depleted');
+                    pairedSlot.classList.remove('two-slot-item');
+                    pairedSlot.classList.remove('two-slot-secondary');
+                }}
+            }}
+
+            // Clean up
+            if (textarea) {{
+                textarea.oninput = null;
+                textarea.readOnly = false;
+            }}
+            slot.classList.remove('two-slot-item');
+            slot.classList.remove('two-slot-secondary');
+        }}
+
+        function selectHirelingItem(itemName, slots) {{
+            if (!currentHirelingSlot) return;
+
+            // Format item text
+            let itemText = itemName;
+            if (itemName.includes('(') && itemName.includes(')')) {{
+                const idx = itemName.indexOf('(');
+                const name = itemName.substring(0, idx).trim();
+                const details = itemName.substring(idx);
+                itemText = name + '\\n' + details;
+            }}
+
+            const textarea = currentHirelingSlot.querySelector('.hireling-slot-content textarea');
+            if (textarea) {{
+                textarea.value = itemText;
+            }}
+
+            // Reset classes
+            const markers = currentHirelingSlot.querySelectorAll('.usage-marker');
+            markers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
+            currentHirelingSlot.classList.remove('depleted');
+            currentHirelingSlot.classList.remove('two-slot-item');
+            currentHirelingSlot.classList.remove('two-slot-secondary');
+            currentHirelingSlot.classList.remove('condition-slot');
+
+            // Remove any existing condition clear text
+            const existingClear = currentHirelingSlot.querySelector('.condition-clear');
+            if (existingClear) existingClear.remove();
+
+            // Check if this is a condition
+            if (CONDITION_CLEAR[itemName]) {{
+                currentHirelingSlot.classList.add('condition-slot');
+                const clearDiv = document.createElement('div');
+                clearDiv.className = 'condition-clear';
+                clearDiv.textContent = CONDITION_CLEAR[itemName];
+                currentHirelingSlot.querySelector('.hireling-slot-content').appendChild(clearDiv);
+            }}
+
+            // Handle 2-slot items
+            if (slots === 2) {{
+                currentHirelingSlot.classList.add('two-slot-item');
+
+                const hirelingCard = currentHirelingSlot.closest('.hireling-card');
+                const slotNum = parseInt(currentHirelingSlot.dataset.slot);
+                const pairedSlotNum = getHirelingPairedSlotNum(slotNum);
+
+                const pairedSlot = hirelingCard.querySelector(`.hireling-inventory-slot[data-slot="${{pairedSlotNum}}"]`);
+                if (pairedSlot) {{
+                    const pairedTextarea = pairedSlot.querySelector('.hireling-slot-content textarea');
+                    if (pairedTextarea) {{
+                        pairedTextarea.value = itemText;
+                        pairedTextarea.readOnly = true;
+                    }}
+                    const pairedMarkers = pairedSlot.querySelectorAll('.usage-marker');
+                    pairedMarkers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
+                    pairedSlot.classList.remove('depleted');
+                    pairedSlot.classList.add('two-slot-secondary');
+
+                    // Set up mirroring
+                    textarea.oninput = function() {{
+                        pairedTextarea.value = this.value;
+                    }};
+                }}
+            }}
+
+            closeItemSelector();
+            currentHirelingSlot = null;
+        }}
+
+        function toggleHirelingUsage(marker) {{
+            const slot = marker.closest('.hireling-inventory-slot');
+            const textarea = slot.querySelector('.hireling-slot-content textarea');
+
+            if (!textarea || !textarea.value.trim()) {{
+                return;
+            }}
+
+            const markers = Array.from(slot.querySelectorAll('.usage-marker'));
+            const isSixUseItem = textarea.value.toLowerCase().includes('torch') ||
+                                 textarea.value.toLowerCase().includes('lantern');
+
+            const clickedIsUsed = marker.classList.contains('used') || marker.classList.contains('half-used');
+
+            if (isSixUseItem) {{
+                if (marker.classList.contains('used')) {{
+                    marker.classList.remove('used');
+                }} else if (marker.classList.contains('half-used')) {{
+                    marker.classList.remove('half-used');
+                    marker.classList.add('used');
+                }} else {{
+                    marker.classList.add('half-used');
+                }}
+                const allFullyUsed = markers.every(m => m.classList.contains('used'));
+                if (allFullyUsed) {{
+                    slot.classList.add('depleted');
+                }} else {{
+                    slot.classList.remove('depleted');
+                }}
+            }} else {{
+                if (clickedIsUsed) {{
+                    for (let i = markers.length - 1; i >= 0; i--) {{
+                        if (markers[i].classList.contains('used')) {{
+                            markers[i].classList.remove('used');
+                            break;
+                        }}
+                    }}
+                }} else {{
+                    for (let i = 0; i < markers.length; i++) {{
+                        if (!markers[i].classList.contains('used')) {{
+                            markers[i].classList.add('used');
+                            break;
+                        }}
+                    }}
+                }}
+
+                const allUsed = markers.every(m => m.classList.contains('used'));
+
+                // Handle paired slots for two-slot items
+                let pairedSlot = null;
+                if (slot.classList.contains('two-slot-item')) {{
+                    const hirelingCard = slot.closest('.hireling-card');
+                    const slotNum = parseInt(slot.dataset.slot);
+                    const pairedSlotNum = getHirelingPairedSlotNum(slotNum);
+                    pairedSlot = hirelingCard.querySelector(`.hireling-inventory-slot[data-slot="${{pairedSlotNum}}"]`);
+                }}
+
+                if (allUsed) {{
+                    slot.classList.add('depleted');
+                    if (pairedSlot) pairedSlot.classList.add('depleted');
+                }} else {{
+                    slot.classList.remove('depleted');
+                    if (pairedSlot) pairedSlot.classList.remove('depleted');
+                }}
+            }}
+        }}
+
         // Make functions globally accessible
         window.generateNewCharacter = generateNewCharacter;
         window.closeConfirmGenerate = closeConfirmGenerate;
@@ -728,13 +1319,24 @@ def get_javascript_code() -> str:
         window.regenerateCharacter = regenerateCharacter;
         window.acceptCharacter = acceptCharacter;
         window.toggleDiceRoller = toggleDiceRoller;
+        window.toggleInventory = toggleInventory;
+        window.toggleSection = toggleSection;
         window.rollDice = rollDice;
         window.toggleUsage = toggleUsage;
         window.resetUsageMarkers = resetUsageMarkers;
         window.openItemSelector = openItemSelector;
-        window.closeItemSelector = closeItemSelector;
+        window.closeItemSelector = closeItemSelectorWithReset;
         window.selectItem = selectItem;
         window.clearSlot = clearSlot;
+        window.addIgnoredCondition = addIgnoredCondition;
+        window.removeIgnoredCondition = removeIgnoredCondition;
+        window.showGritAlert = showGritAlert;
+        window.closeGritAlert = closeGritAlert;
+        window.addHireling = addHireling;
+        window.removeHireling = removeHireling;
+        window.openHirelingItemSelector = openHirelingItemSelector;
+        window.clearHirelingSlot = clearHirelingSlot;
+        window.toggleHirelingUsage = toggleHirelingUsage;
 
         document.addEventListener('DOMContentLoaded', function() {{
             console.log('Character sheet loaded');
@@ -827,6 +1429,25 @@ def get_javascript_code() -> str:
                     }}
                     if (parseInt(this.value) < 0) {{
                         this.value = 0;
+                    }}
+                }});
+            }}
+
+            // Enforce grit limits and track max
+            const gritInput = document.querySelector('.grit-input');
+            if (gritInput) {{
+                gritInput.addEventListener('change', function() {{
+                    let val = parseInt(this.value) || 0;
+                    if (val < 0) val = 0;
+                    if (val > 6) val = 6;
+                    this.value = val;
+                    // Update max grit when user manually changes the value
+                    // (only if increasing or no ignored conditions)
+                    const ignoredCount = document.querySelectorAll('.ignored-condition-row').length;
+                    const currentMax = parseInt(this.dataset.maxGrit) || 0;
+                    // If the new value + ignored conditions > current max, update max
+                    if (val + ignoredCount > currentMax) {{
+                        this.dataset.maxGrit = val + ignoredCount;
                     }}
                 }});
             }}

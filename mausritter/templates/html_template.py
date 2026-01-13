@@ -69,55 +69,60 @@ def _build_middle_section(character: Dict[str, Any]) -> str:
     pips_total = character["pips_total"]
 
     return f"""
-    <div class="middle-section">
-        <div class="portrait-column">
-            <div class="portrait-header">
-                <span>Portrait/description</span>
-            </div>
-            <div class="portrait-box">
-                <textarea class="portrait-input" placeholder="Enter description..."></textarea>
-            </div>
+    <div class="stats-section">
+        <div class="section-header" onclick="toggleSection('stats')">
+            <span class="section-title">Stats</span>
+            <span class="section-toggle" id="statsToggle">▲</span>
         </div>
-        <div class="stats-box">
-            <div class="attributes-section">
-                <div class="attributes-header">
-                    <span></span>
-                    <span>Max</span>
-                    <span>Current</span>
-                </div>
-                <div class="attributes-table">
-                    <div class="attribute-row">
-                        <span class="attribute-label">STR</span>
-                        <input type="number" value="{attrs['STR']['max']}" min="1" max="12" />
-                        <input type="number" value="{attrs['STR']['current']}" min="0" max="12" />
-                    </div>
-                    <div class="attribute-row">
-                        <span class="attribute-label">DEX</span>
-                        <input type="number" value="{attrs['DEX']['max']}" min="1" max="12" />
-                        <input type="number" value="{attrs['DEX']['current']}" min="0" max="12" />
-                    </div>
-                    <div class="attribute-row">
-                        <span class="attribute-label">WIL</span>
-                        <input type="number" value="{attrs['WIL']['max']}" min="1" max="12" />
-                        <input type="number" value="{attrs['WIL']['current']}" min="0" max="12" />
+        <div class="section-content active" id="statsContent">
+            <div class="middle-section">
+                <div class="portrait-column">
+                    <div class="portrait-box">
+                        <textarea class="portrait-input" placeholder="Enter description..."></textarea>
                     </div>
                 </div>
-            </div>
-            <div class="hp-section">
-                <div class="hp-table">
-                    <div class="hp-row">
-                        <span class="hp-label">HP</span>
-                        <input type="number" value="{hp['max']}" min="1" max="20" />
-                        <input type="number" value="{hp['current']}" min="0" max="20" />
+                <div class="stats-box">
+                    <div class="attributes-section">
+                        <div class="attributes-header">
+                            <span></span>
+                            <span>Max</span>
+                            <span>Current</span>
+                        </div>
+                        <div class="attributes-table">
+                            <div class="attribute-row">
+                                <span class="attribute-label">STR</span>
+                                <input type="number" value="{attrs['STR']['max']}" min="1" max="12" />
+                                <input type="number" value="{attrs['STR']['current']}" min="0" max="12" />
+                            </div>
+                            <div class="attribute-row">
+                                <span class="attribute-label">DEX</span>
+                                <input type="number" value="{attrs['DEX']['max']}" min="1" max="12" />
+                                <input type="number" value="{attrs['DEX']['current']}" min="0" max="12" />
+                            </div>
+                            <div class="attribute-row">
+                                <span class="attribute-label">WIL</span>
+                                <input type="number" value="{attrs['WIL']['max']}" min="1" max="12" />
+                                <input type="number" value="{attrs['WIL']['current']}" min="0" max="12" />
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <div class="pips-section">
-                <div class="pips-table">
-                    <div class="pips-row">
-                        <span class="pips-label">Pips</span>
-                        <input type="number" class="pips-total-input" value="250" readonly />
-                        <input type="number" class="pips-input" value="{pips}" min="0" max="250" />
+                    <div class="hp-section">
+                        <div class="hp-table">
+                            <div class="hp-row">
+                                <span class="hp-label">HP</span>
+                                <input type="number" value="{hp['max']}" min="1" max="20" />
+                                <input type="number" value="{hp['current']}" min="0" max="20" />
+                            </div>
+                        </div>
+                    </div>
+                    <div class="pips-section">
+                        <div class="pips-table">
+                            <div class="pips-row">
+                                <span class="pips-label">Pips</span>
+                                <input type="number" class="pips-total-input" value="250" readonly />
+                                <input type="number" class="pips-input" value="{pips}" min="0" max="250" />
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -138,9 +143,11 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
 
     return f"""
     <div class="inventory-section">
-        <div class="inventory-header">
+        <div class="inventory-header" onclick="toggleInventory()">
             <span class="inventory-title">Inventory</span>
+            <span class="inventory-toggle" id="inventoryToggle">▲</span>
         </div>
+        <div class="inventory-content active" id="inventoryContent">
         <div class="inventory-container">
             <div class="paw-column">
                 <div class="paw-grid">
@@ -328,6 +335,7 @@ def _build_inventory_section(character: Dict[str, Any]) -> str:
                 <div class="inventory-legend-item"><strong>Pack:</strong> Takes time to ready. During combat, requires an action to retrieve.</div>
             </div>
         </div>
+        </div>
     </div>"""
 
 
@@ -338,34 +346,66 @@ def _build_bottom_section(character: Dict[str, Any]) -> str:
     grit = character.get("grit", 0)
 
     return f"""
-    <div class="bottom-section">
-        <div class="level-xp-box">
-            <div class="level-row">
-                <span class="stat-label">Level</span>
-                <input type="number" value="{level}" min="1" max="10" />
-            </div>
-            <div class="xp-row">
-                <span class="stat-label">XP</span>
-                <input type="number" value="{xp}" min="0" />
+    <div class="other-section">
+        <div class="section-header" onclick="toggleSection('other')">
+            <span class="section-title">Other</span>
+            <span class="section-toggle" id="otherToggle">▲</span>
+        </div>
+        <div class="section-content active" id="otherContent">
+            <div class="bottom-section">
+                <div class="level-xp-box">
+                    <div class="level-row">
+                        <span class="stat-label">Level</span>
+                        <input type="number" value="{level}" min="1" max="10" />
+                    </div>
+                    <div class="xp-row">
+                        <span class="stat-label">XP</span>
+                        <input type="number" value="{xp}" min="0" />
+                    </div>
+                </div>
+                <div class="grit-conditions-box">
+                    <div class="grit-row">
+                        <span class="stat-label">Grit</span>
+                        <input type="number" class="grit-input" value="{grit}" min="0" max="6" data-max-grit="{grit}" />
+                    </div>
+                    <div class="conditions-area">
+                        <div class="conditions-header">
+                            <button class="slot-btn add-btn" onclick="addIgnoredCondition(this)">+</button>
+                            <span class="conditions-label">Ignored conditions</span>
+                        </div>
+                        <div class="ignored-conditions-list">
+                        </div>
+                    </div>
+                </div>
+                <div class="banked-box">
+                    <div class="banked-label">Banked items and pips</div>
+                    <textarea placeholder=""></textarea>
+                    <div class="mausritter-logo">Mausritter</div>
+                </div>
+                <div class="level-note">Recovered treasure ▸ XP.</div>
+                <div class="grit-note">Ignore a number of conditions equal to your Grit.</div>
+                <div class="banked-note"></div>
             </div>
         </div>
-        <div class="grit-conditions-box">
-            <div class="grit-row">
-                <span class="stat-label">Grit</span>
-                <input type="number" value="{grit}" min="0" max="6" />
+    </div>"""
+
+
+def _build_hirelings_section() -> str:
+    """Build the hirelings section with add button."""
+    return """
+    <div class="hirelings-section">
+        <div class="section-header" onclick="toggleSection('hirelings')">
+            <span class="section-title">Hirelings</span>
+            <span class="section-toggle" id="hirelingsToggle">▼</span>
+        </div>
+        <div class="section-content" id="hirelingsContent">
+            <div class="add-hireling-row">
+                <button class="slot-btn add-btn" onclick="addHireling()">+</button>
+                <span class="add-hireling-label">Add hireling</span>
             </div>
-            <div class="conditions-area">
-                <textarea placeholder="Ignored conditions"></textarea>
+            <div class="hirelings-container" id="hirelingsContainer">
             </div>
         </div>
-        <div class="banked-box">
-            <div class="banked-label">Banked items and pips</div>
-            <textarea placeholder=""></textarea>
-            <div class="mausritter-logo">Mausritter</div>
-        </div>
-        <div class="level-note">Recovered treasure ▸ XP</div>
-        <div class="grit-note">Ignore a number of conditions equal to your Grit</div>
-        <div class="banked-note"></div>
     </div>"""
 
 
@@ -373,6 +413,18 @@ def _build_footer() -> str:
     """Build the footer section."""
     js_code = get_javascript_code()
     return f"""
+    <div class="custom-dialog-modal" id="gritAlertModal">
+        <div class="custom-dialog-content">
+            <div class="custom-dialog-header">Grit</div>
+            <div class="custom-dialog-body" id="gritAlertBody">
+                No Grit remaining to ignore conditions.
+            </div>
+            <div class="custom-dialog-buttons">
+                <button class="dialog-btn dialog-btn-primary" onclick="closeGritAlert()">OK</button>
+            </div>
+        </div>
+    </div>
+
     <div class="custom-dialog-modal" id="confirmGenerateModal">
         <div class="custom-dialog-content">
             <div class="custom-dialog-header">Character generation</div>
@@ -455,6 +507,7 @@ def create_html_character_sheet(character: Dict[str, Any], output_path: Path) ->
         _build_middle_section(character),
         _build_inventory_section(character),
         _build_bottom_section(character),
+        _build_hirelings_section(),
         _build_footer(),
     ]
 

@@ -124,6 +124,53 @@ PHYSICAL_DETAILS = {
     66: "Curly tail",
 }
 
+# Hireling Looks (from SRD 2.3 NPC Details d20 table - Appearance column)
+HIRELING_LOOKS = [
+    "Soulful eyes",
+    "Bright, patched clothes",
+    "Wreath of daisies",
+    "Grubby clothes",
+    "Large floppy hat",
+    "Pockets full of seed",
+    "Bent twig walking stick",
+    "Carries rusted pinsword",
+    "Long, wild fur",
+    "Very, very old",
+    "Bandaged tail",
+    "Tail tied with a bow",
+    "Missing an ear",
+    "Long whiskers",
+    "Twinkling eyes",
+    "Huge, heavy black cloak",
+    "Old battle scars",
+    "Very young",
+    "Shaved fur",
+    "Braided fur",
+]
+
+# Hireling Dispositions (from SRD 2.3 - same as Birthsign dispositions)
+HIRELING_DISPOSITIONS = [
+    "Brave / Reckless",
+    "Industrious / Unimaginative",
+    "Inquisitive / Stubborn",
+    "Generous / Wrathful",
+    "Wise / Mysterious",
+    "Nurturing / Worrying",
+]
+
+# Hireling Types with wages (from SRD 2.3)
+HIRELING_TYPES = [
+    {"type": "Torchbearer", "wages": "1p/day"},
+    {"type": "Labourer", "wages": "2p/day"},
+    {"type": "Tunnel digger", "wages": "5p/day"},
+    {"type": "Armourer/blacksmith", "wages": "8p/day"},
+    {"type": "Local guide", "wages": "10p/day"},
+    {"type": "Mouse-at-arms", "wages": "10p/day"},
+    {"type": "Scholar", "wages": "20p/day"},
+    {"type": "Knight", "wages": "25p/day"},
+    {"type": "Interpreter", "wages": "30p/day"},
+]
+
 FIRST_NAMES = [
     "Acorn", "Bramble", "Chestnut", "Daisy", "Elder", "Fern", "Ginger",
     "Hazel", "Ivy", "Juniper", "Kestrel", "Laurel", "Maple", "Nettle",
@@ -272,6 +319,61 @@ INVENTORY_ITEMS = {
         {"name": "20p IOU from a noblemouse", "price": "20p", "slots": 1},
         {"name": "Scrap of obscure book", "price": "5p", "slots": 1},
     ],
+    "Spells": [
+        {"name": "Spell: Fireball", "price": "-", "slots": 1, "notes": "Deal [SUM]+[DICE] damage to all within 6\""},
+        {"name": "Spell: Heal", "price": "-", "slots": 1, "notes": "Heal [SUM] STR, remove Injured"},
+        {"name": "Spell: Magic missile", "price": "-", "slots": 1, "notes": "Deal [SUM]+[DICE] damage to creature in sight"},
+        {"name": "Spell: Fear", "price": "-", "slots": 1, "notes": "Give Frightened to [DICE] creatures"},
+        {"name": "Spell: Darkness", "price": "-", "slots": 1, "notes": "Create [SUM]x2\" sphere of darkness for [DICE] Turns"},
+        {"name": "Spell: Restore", "price": "-", "slots": 1, "notes": "Remove Exhausted/Frightened from [DICE]+1 creatures"},
+        {"name": "Spell: Be understood", "price": "-", "slots": 1, "notes": "Communicate with [DICE] creatures for [DICE] Turns"},
+        {"name": "Spell: Ghost beetle", "price": "-", "slots": 1, "notes": "Create illusory beetle (6 slots) for [DICE]x6 Turns"},
+        {"name": "Spell: Light", "price": "-", "slots": 1, "notes": "Stun [DICE] creatures or create torchlight [SUM] Turns"},
+        {"name": "Spell: Invisible ring", "price": "-", "slots": 1, "notes": "Create [DICE]x6\" invisible force ring for [DICE] Turns"},
+        {"name": "Spell: Knock", "price": "-", "slots": 1, "notes": "Open door/container as STR 10+[DICE]x4"},
+        {"name": "Spell: Grease", "price": "-", "slots": 1, "notes": "Cover [DICE]x6\" in slippery grease"},
+        {"name": "Spell: Grow", "price": "-", "slots": 1, "notes": "Grow creature to [DICE]+1 times size for 1 Turn"},
+        {"name": "Spell: Invisibility", "price": "-", "slots": 1, "notes": "Invisible for [DICE] Turns, movement reduces duration"},
+        {"name": "Spell: Catnip", "price": "-", "slots": 1, "notes": "Object becomes irresistible to cats for [DICE] Turns"},
+    ],
+    "Conditions": [
+        {
+            "name": "Exhausted",
+            "price": "-",
+            "slots": 1,
+            "notes": "Body slot | Clear: Rest a night in camp",
+        },
+        {
+            "name": "Frightened",
+            "price": "-",
+            "slots": 1,
+            "notes": "Paw slot | Clear: A moment's rest in a safe place",
+        },
+        {
+            "name": "Hungry",
+            "price": "-",
+            "slots": 1,
+            "notes": "Body slot | Clear: Eat a fresh ration",
+        },
+        {
+            "name": "Injured",
+            "price": "-",
+            "slots": 1,
+            "notes": "Body slot | Clear: Heal 1 STR at full rest",
+        },
+        {
+            "name": "Poisoned",
+            "price": "-",
+            "slots": 1,
+            "notes": "Body slot | Clear: Antidote, healer's care, or rest in a safe settlement",
+        },
+        {
+            "name": "Stunned",
+            "price": "-",
+            "slots": 1,
+            "notes": "Paw slot | Clear: A moment's rest in a safe place",
+        },
+    ],
 }
 
 
@@ -295,4 +397,7 @@ def get_all_data_as_json() -> dict:
         "LAST_NAMES": LAST_NAMES,
         "WEAPONS": WEAPONS,
         "INVENTORY_ITEMS": INVENTORY_ITEMS,
+        "HIRELING_LOOKS": HIRELING_LOOKS,
+        "HIRELING_DISPOSITIONS": HIRELING_DISPOSITIONS,
+        "HIRELING_TYPES": HIRELING_TYPES,
     }

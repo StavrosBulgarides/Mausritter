@@ -68,6 +68,8 @@ body {
     border: 2px solid #4a4a5a;
     border-radius: 8px;
     padding: 15px 20px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .name-row {
@@ -138,6 +140,8 @@ body {
     padding: 15px 20px;
     border: 2px solid #4a4a5a;
     border-radius: 8px;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .appearance-row {
@@ -175,18 +179,15 @@ body {
     margin-bottom: 20px;
 }
 
+.stats-section,
+.other-section {
+    margin-bottom: 20px;
+}
+
 .portrait-column {
     display: flex;
     flex-direction: column;
     min-width: 0;
-}
-
-.portrait-header {
-    padding: 5px 0 5px 20px;
-    font-size: 0.85em;
-    color: #6a6a7a;
-    font-style: italic;
-    text-align: left;
 }
 
 .portrait-box {
@@ -196,6 +197,7 @@ body {
     background: linear-gradient(135deg, #f5f5f5 0%, #e8e8e8 100%);
     flex: 1;
     min-width: 0;
+    min-height: 150px;
     display: flex;
     flex-direction: column;
 }
@@ -420,14 +422,78 @@ body {
     margin-bottom: 20px;
 }
 
+/* Generic collapsible section styles */
+.section-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px 15px;
+    background: #f8f8f8;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    user-select: none;
+}
+
+.section-header:hover {
+    background: #f0f0f0;
+}
+
+.section-title {
+    font-weight: bold;
+    font-size: 1.1em;
+    color: #4a4a5a;
+}
+
+.section-toggle {
+    font-size: 1em;
+    color: #6a6a7a;
+}
+
+.section-content {
+    display: none;
+}
+
+.section-content.active {
+    display: block;
+}
+
+/* Inventory section - uses generic section styles */
 .inventory-header {
-    margin-bottom: 15px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    cursor: pointer;
+    padding: 10px 15px;
+    background: #f8f8f8;
+    border: 1px solid #d0d0d0;
+    border-radius: 8px;
+    margin-bottom: 10px;
+    user-select: none;
+}
+
+.inventory-header:hover {
+    background: #f0f0f0;
 }
 
 .inventory-title {
     font-weight: bold;
-    font-size: 1.8em;
+    font-size: 1.1em;
     color: #4a4a5a;
+}
+
+.inventory-toggle {
+    font-size: 1em;
+    color: #6a6a7a;
+}
+
+.inventory-content {
+    display: none;
+}
+
+.inventory-content.active {
+    display: block;
 }
 
 .inventory-container {
@@ -629,8 +695,18 @@ body {
 .pack-slot.depleted .slot-content textarea,
 .paw-slot.depleted .slot-content textarea,
 .body-slot.depleted .slot-content textarea {
-    opacity: 0.5;
+    opacity: 0.7;
     text-decoration: line-through;
+    background: #fce4e4;
+    border-color: #e8a0a0;
+}
+
+/* "Select weapon" placeholder - red background */
+.slot-content textarea.needs-selection {
+    background: #fce4e4;
+    color: #904040;
+    font-style: italic;
+    border-color: #e8a0a0;
 }
 
 .two-slot-secondary .usage-markers {
@@ -644,6 +720,40 @@ body {
 .two-slot-secondary .slot-content textarea {
     background: #f0f0f0;
     cursor: not-allowed;
+}
+
+/* Condition slots - contrasting background to highlight they are bad */
+.inventory-slot.condition-slot {
+    background: #fce4e4;
+}
+
+.inventory-slot.condition-slot .slot-content textarea {
+    background: #fef0f0;
+    border-color: #e8a0a0;
+}
+
+.inventory-slot.condition-slot .slot-content textarea:focus {
+    background: #fff8f8;
+    border-color: #c07070;
+}
+
+.inventory-slot.condition-slot .slot-content {
+    flex-direction: column;
+}
+
+.inventory-slot.condition-slot .slot-content textarea {
+    flex: 1;
+    min-height: 40px;
+}
+
+.inventory-slot.condition-slot .condition-clear {
+    font-size: 0.75em;
+    color: #905050;
+    text-align: center;
+    margin-top: 4px;
+    font-style: italic;
+    line-height: 1.2;
+    flex-shrink: 0;
 }
 
 .slot-content {
@@ -680,7 +790,7 @@ body {
 /* Bottom Section */
 .bottom-section {
     display: grid;
-    grid-template-columns: 150px 370px 1fr;
+    grid-template-columns: 1fr 2.5fr 2fr;
     gap: 15px;
     margin-bottom: 20px;
     align-items: stretch;
@@ -698,6 +808,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .level-row, .xp-row {
@@ -711,6 +822,7 @@ body {
 
 .xp-row {
     flex: 1;
+    min-height: 60px;
 }
 
 .xp-row .stat-label,
@@ -764,6 +876,7 @@ body {
     flex: 1;
     display: flex;
     flex-direction: column;
+    min-width: 0;
 }
 
 .grit-row {
@@ -801,21 +914,62 @@ body {
 .conditions-area {
     flex: 1;
     display: flex;
-}
-
-.conditions-area textarea {
-    width: 100%;
+    flex-direction: column;
+    min-height: 60px;
     padding: 8px;
-    border: none;
-    resize: none;
-    font-family: inherit;
-    font-size: 0.9em;
     background: #fafafa;
 }
 
-.conditions-area textarea:focus {
-    outline: none;
-    background: white;
+.conditions-header {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    margin-bottom: 8px;
+}
+
+.conditions-label {
+    font-size: 0.85em;
+    color: #6a6a7a;
+    font-style: italic;
+}
+
+.ignored-conditions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.ignored-condition-row {
+    display: flex;
+    align-items: flex-start;
+    gap: 8px;
+    background: #fce4e4;
+    border-radius: 4px;
+    padding: 6px 8px;
+}
+
+.ignored-condition-row .slot-btn {
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.ignored-condition-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.ignored-condition-name {
+    font-weight: 500;
+    font-size: 0.9em;
+    color: #904040;
+}
+
+.ignored-condition-clear {
+    font-size: 0.75em;
+    color: #905050;
+    font-style: italic;
 }
 
 .grit-note {
@@ -830,6 +984,8 @@ body {
     padding: 12px;
     display: flex;
     flex-direction: column;
+    min-width: 0;
+    overflow: hidden;
 }
 
 .banked-label {
@@ -905,6 +1061,7 @@ body {
 
 .dice-roller-title {
     font-weight: bold;
+    font-size: 1.1em;
     color: #4a4a5a;
 }
 
@@ -1107,6 +1264,27 @@ body {
     background: #e8e8e8;
 }
 
+/* Conditions category - red styling to indicate these are bad */
+.item-category.conditions-category .item-category-header {
+    background: #fce4e4;
+    color: #904040;
+}
+
+.item-category.conditions-category .item-category-header:hover {
+    background: #f8d4d4;
+}
+
+.item-category.conditions-category .item-category-items {
+    background: #fef8f8;
+    border-radius: 0 0 6px 6px;
+    margin-top: -4px;
+    padding-top: 8px;
+}
+
+.item-category.conditions-category .item-option:hover {
+    background: #fce4e4;
+}
+
 .item-category-items {
     display: none;
     padding-left: 10px;
@@ -1221,6 +1399,348 @@ body {
 
 .dialog-btn-secondary:hover {
     background: #d0d0d0;
+}
+
+/* Hirelings Section */
+.hirelings-section {
+    margin-bottom: 20px;
+}
+
+.hirelings-container {
+    display: flex;
+    flex-direction: column;
+    gap: 20px;
+}
+
+.add-hireling-row {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.add-hireling-label {
+    font-size: 0.95em;
+    color: #6a6a7a;
+}
+
+/* Individual Hireling Card */
+.hireling-card {
+    border: 2px solid #4a4a5a;
+    border-radius: 8px;
+    padding: 15px;
+    background: white;
+}
+
+.hireling-card-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: flex-start;
+    margin-bottom: 15px;
+    padding-bottom: 10px;
+    border-bottom: 1px solid #d0d0d0;
+}
+
+.hireling-title {
+    font-family: 'UnifrakturMaguntia', 'Times New Roman', serif;
+    font-size: 1.8em;
+    color: #4a4a5a;
+}
+
+.hireling-remove-btn {
+    width: 24px;
+    height: 24px;
+    border: 1px solid #d0d0d0;
+    border-radius: 4px;
+    background: #f8f8f8;
+    cursor: pointer;
+    font-size: 16px;
+    font-weight: bold;
+    color: #aa2a2a;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+.hireling-remove-btn:hover {
+    background: #fce4e4;
+    border-color: #aa2a2a;
+}
+
+.hireling-info-row {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 15px;
+}
+
+.hireling-field {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+}
+
+.hireling-field-label {
+    font-size: 0.85em;
+    color: #6a6a7a;
+    font-style: italic;
+}
+
+.hireling-field input {
+    border: none;
+    border-bottom: 1px solid #d0d0d0;
+    padding: 5px;
+    font-size: 0.95em;
+    color: #4a4a5a;
+    background: transparent;
+}
+
+.hireling-field input:focus {
+    outline: none;
+    border-bottom-color: #4a4a5a;
+}
+
+.hireling-body {
+    display: grid;
+    grid-template-columns: auto 1fr;
+    gap: 15px;
+}
+
+/* Hireling Stats */
+.hireling-stats {
+    display: flex;
+    flex-direction: column;
+    min-width: 160px;
+    max-width: 180px;
+}
+
+.hireling-stats-header {
+    display: grid;
+    grid-template-columns: 50px 1fr 1fr;
+    padding: 5px 2px;
+    font-size: 0.75em;
+    color: #6a6a7a;
+    font-style: italic;
+}
+
+.hireling-stats-header span {
+    text-align: center;
+}
+
+.hireling-stats-header span:first-child {
+    text-align: left;
+}
+
+.hireling-stats-table {
+    border: 2px solid #4a4a5a;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.hireling-stat-row {
+    display: grid;
+    grid-template-columns: 50px 1fr 1fr;
+    border-bottom: 1px solid #d0d0d0;
+}
+
+.hireling-stat-row:last-child {
+    border-bottom: none;
+}
+
+.hireling-stat-label {
+    font-weight: bold;
+    font-size: 0.95em;
+    background: #f0f0f0;
+    padding: 6px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    border-right: 1px solid #d0d0d0;
+    color: #4a4a5a;
+}
+
+.hireling-stat-row input {
+    border: none;
+    background: white;
+    text-align: center;
+    font-size: 0.85em;
+    padding: 6px;
+    border-right: 1px solid #d0d0d0;
+    width: 100%;
+    min-width: 0;
+}
+
+.hireling-stat-row input:last-child {
+    border-right: none;
+}
+
+.hireling-stat-row input:focus {
+    outline: none;
+    background: #f8f8f8;
+}
+
+/* Hireling Inventory (6 slots: 2 paw, 4 pack) */
+.hireling-inventory {
+    display: flex;
+    gap: 10px;
+    flex: 1;
+}
+
+.hireling-paw-column {
+    display: flex;
+    flex-direction: column;
+    width: 120px;
+    flex-shrink: 0;
+}
+
+.hireling-pack-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.hireling-paw-grid {
+    display: flex;
+    flex-direction: column;
+    border: 2px solid #4a4a5a;
+    border-radius: 8px;
+    overflow: hidden;
+    flex: 1;
+}
+
+.hireling-pack-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    grid-template-rows: 1fr 1fr;
+    border: 2px solid #4a4a5a;
+    border-radius: 8px;
+    overflow: hidden;
+    flex: 1;
+}
+
+.hireling-inventory-slot {
+    padding: 8px;
+    min-height: 70px;
+    display: flex;
+    flex-direction: column;
+    background: white;
+}
+
+/* Paw slots stack vertically with divider */
+.hireling-paw-grid .hireling-inventory-slot:first-child {
+    border-bottom: 1px solid #d0d0d0;
+}
+
+/* Pack grid internal borders */
+.hireling-pack-grid .hireling-inventory-slot {
+    border-right: 1px solid #d0d0d0;
+    border-bottom: 1px solid #d0d0d0;
+}
+
+.hireling-pack-grid .hireling-inventory-slot:nth-child(2),
+.hireling-pack-grid .hireling-inventory-slot:nth-child(4) {
+    border-right: none;
+}
+
+.hireling-pack-grid .hireling-inventory-slot:nth-child(3),
+.hireling-pack-grid .hireling-inventory-slot:nth-child(4) {
+    border-bottom: none;
+}
+
+.hireling-slot-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 6px;
+}
+
+.hireling-slot-label {
+    font-weight: bold;
+    font-size: 1em;
+    color: #4a4a5a;
+}
+
+.hireling-slot-actions {
+    display: flex;
+    gap: 4px;
+}
+
+.hireling-slot-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: stretch;
+}
+
+.hireling-slot-content textarea {
+    width: 100%;
+    flex: 1;
+    padding: 4px;
+    border: 1px solid #e0e0e0;
+    border-radius: 4px;
+    text-align: center;
+    font-size: 0.8em;
+    background: #fafafa;
+    resize: none;
+    font-family: inherit;
+}
+
+.hireling-slot-content textarea:focus {
+    outline: none;
+    border-color: #4a4a5a;
+    background: white;
+}
+
+.hireling-usage-markers {
+    display: flex;
+    justify-content: center;
+    gap: 6px;
+    margin-top: 6px;
+}
+
+.hireling-usage-markers .usage-marker {
+    width: 14px;
+    height: 14px;
+}
+
+/* Hireling inventory slot - condition styling */
+.hireling-inventory-slot.condition-slot {
+    background: #fce4e4;
+}
+
+.hireling-inventory-slot.condition-slot .hireling-slot-content textarea {
+    background: #fef0f0;
+    border-color: #e8a0a0;
+}
+
+.hireling-inventory-slot.condition-slot .condition-clear {
+    font-size: 0.7em;
+    color: #905050;
+    text-align: center;
+    margin-top: 2px;
+    font-style: italic;
+}
+
+/* Hireling depleted state - cross through text with red background */
+.hireling-inventory-slot.depleted .hireling-slot-content textarea {
+    opacity: 0.7;
+    text-decoration: line-through;
+    background: #fce4e4;
+    border-color: #e8a0a0;
+}
+
+/* Hireling two-slot item secondary styling */
+.hireling-inventory-slot.two-slot-secondary .hireling-usage-markers {
+    display: none;
+}
+
+.hireling-inventory-slot.two-slot-secondary .hireling-slot-header {
+    opacity: 0.5;
+}
+
+.hireling-inventory-slot.two-slot-secondary .hireling-slot-content textarea {
+    background: #f0f0f0;
+    cursor: not-allowed;
 }
 
 @media print {
