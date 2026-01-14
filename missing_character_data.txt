@@ -5,7 +5,7 @@ This file lists character-related data from the SRD that is NOT currently
 included in the character generator, or where the implementation differs
 from the official rules.
 
-Last updated: 2026-01-12
+Last updated: 2026-01-14
 
 RULES DIFFERENCES
 -----------------
@@ -16,69 +16,91 @@ RULES DIFFERENCES
 
 MISSING WEAPON DATA
 -------------------
-1. Ranged Weapons (not in weapon selection)
-   - Light ranged: d6 damage, main paw (Sling, light crossbow) - Cost: 10p
-   - Heavy ranged: d8 damage, both paws (Bow, heavy crossbow) - Cost: 40p
-
-2. Ammunition (not tracked)
-   - Stones, pouch: Carried in body slot - Cost: 1p
-   - Arrows, quiver: Carried in body slot - Cost: 5p
-
-3. Improvised Weapons (not in selection)
+1. Improvised Weapons (not in selection)
    - d6 damage, wielded in main paw or both paws
    - Special: Always mark usage after a fight
 
-SPELL DETAILS (NOT IMPLEMENTED)
--------------------------------
-Some backgrounds provide spells, but spell mechanics are not included:
-- Spells provided: Magic Missile, Be Understood, Heal, Restore, Darkness
-- Not implemented: Spell casting rules, spell dice, mishaps, dooms
-- Spell recharge mechanics not shown
+SPELL MECHANICS (NOT IMPLEMENTED)
+---------------------------------
+Spells are available in item selector, but spell casting mechanics are not:
+- Not implemented: Spell casting rules, spell dice mechanics
+- Not implemented: Mishaps and Dooms tables
+- Not implemented: Spell recharge mechanics
+- Spells available: Magic Missile, Be Understood, Heal, Restore, Darkness,
+  Fireball, Fear, Ghost Beetle, Light, Invisible Ring, Knock, Grease,
+  Grow, Invisibility, Catnip
 
-HIRELING DETAILS (PARTIALLY REPRESENTED)
-----------------------------------------
-Some backgrounds provide hirelings (shown as text only):
+BACKGROUND HIRELINGS (PARTIALLY IMPLEMENTED)
+--------------------------------------------
+Some backgrounds provide hirelings, but these are not auto-created:
 - Loyal beetle (Beetleherd background)
 - Drunken torchbearer (Ale brewer background)
 - Pack rat (Merchant background)
 
-Hireling stats, loyalty, and rules from SRD "Hirelings" section not included.
-
-CONDITIONS SYSTEM (NOT IMPLEMENTED)
------------------------------------
-Conditions occupy inventory slots and have specific effects/clear requirements:
-
-| Condition   | Effect                           | Clear                      |
-|-------------|----------------------------------|----------------------------|
-| Exhausted   | No running, disadvantage on DEX  | Long rest                  |
-| Frightened  | Disadvantage on WIL saves        | Safe rest                  |
-| Hungry      | No HP recovery from rest         | Eat a meal                 |
-| Injured     | Max HP reduced                   | Full rest + medical aid    |
-| Poisoned    | Disadvantage on all saves        | Antidote or time           |
+Players must manually add these hirelings using the Hirelings section.
 
 IMPLEMENTED FEATURES
 --------------------
 The following features ARE now implemented:
+
+Character Generation:
 - Attribute generation: Roll 3d6, keep two highest (range 2-12 per SRD 2.3)
+- HP and Pips rolled (1d6 each)
+- Background determined by HP/Pips combination (36 backgrounds)
+- Birthsign with disposition
+- Coat (color + pattern combined)
+- Physical detail (d66 table)
+- Random name generation
+- Additional items for low stats (highest attribute <= 9 or <= 7)
+- Generate New Character with Accept/Regenerate flow
+
+Stats & Tracking:
 - Structured inventory (Paw slots, Body slots, Pack slots)
 - Max/Current tracking for attributes and HP
 - Level, XP, Grit fields
 - Pips with max fixed at 250 (purse capacity)
-- Birthsign with disposition
-- Coat (color + pattern combined)
-- Physical detail (d66 table)
-- Background items placed appropriately (armor to body, others to pack)
-- Generate New Character with custom dialogs (Accept/Regenerate flow)
 - Current values enforced to not exceed max values
-- Weapon selection: User prompted to "Select weapon" rather than random assignment
+
+Inventory System:
+- Weapon selection: User prompted to "Select weapon" (not random)
 - Item selector with search functionality and categorized items
 - Item usage markers (3 dots per slot, click to mark usage)
-- Torches/lanterns: 6-use system (each marker can be half-filled for 6 total uses)
+- Torches/lanterns: 6-use system (half-filled markers for 6 total uses)
 - Depleted items shown with strikethrough when all markers used
 - Two-slot items supported (heavy weapons, heavy armor)
 - Empty slots have disabled usage markers
-- Purse item added to Miscellaneous (holds 250 pips)
-- Dice roller with custom notation support
+- Background items placed appropriately (armor to body, others to pack)
+
+Weapons (all types in item selector):
+- Light melee: Needle, Dagger, Hatchet (d6, 1 slot)
+- Medium melee: Sword, Axe, Staff, Hammer, Pickaxe (d6/d8, 1 slot)
+- Heavy melee: Trashhook, Spear, Heavy hammer (d10, 2 slots)
+- Light ranged: Sling, Hand crossbow (d6, 1 slot)
+- Heavy ranged: Bow, Crossbow (d8, 2 slots)
+- Ammunition: Arrows quiver, Stones pouch
+
+Conditions System:
+- All conditions available in item selector: Exhausted, Frightened,
+  Hungry, Injured, Poisoned, Stunned
+- Conditions display their clear requirements
+- Grit-based ignored conditions tracking
+- Ignored conditions reduce available Grit
+
+Hirelings Section:
+- Add/remove hirelings dynamically
+- Hireling stats: STR, DEX, WIL (2d6 each), HP (1d6)
+- Max/Current tracking for hireling stats
+- Hireling appearance (Look) from NPC d20 table
+- Hireling disposition from birthsign dispositions
+- Hireling inventory: 2 paw slots, 4 pack slots
+- Item usage markers for hireling inventory
+- Two-slot item support for hireling inventory
+- Hireling types with wages available in data
+
+UI Features:
+- Collapsible sections: Stats, Inventory, Other, Hirelings
+- Dice roller with custom notation support (e.g., 2d6, 4d20+2)
+- Purse item in Miscellaneous (holds 250 pips)
 
 NPC-SPECIFIC DATA (for GMs, not player characters)
 --------------------------------------------------
