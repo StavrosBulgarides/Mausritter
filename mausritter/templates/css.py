@@ -276,6 +276,22 @@ body {
     color: #4a4a5a;
 }
 
+/* Save button styling for attribute labels */
+.attribute-label.save-btn {
+    cursor: pointer;
+    transition: background 0.2s, color 0.2s;
+    user-select: none;
+}
+
+.attribute-label.save-btn:hover {
+    background: #4a4a5a;
+    color: white;
+}
+
+.attribute-label.save-btn:active {
+    transform: scale(0.95);
+}
+
 .attribute-row input {
     border: none;
     background: white;
@@ -781,9 +797,10 @@ body {
 }
 
 .slot-content textarea.needs-selection {
-    background: #f0f0f0;
-    color: #6a6a7a;
+    background: #fce4e4;
+    color: #904040;
     font-style: italic;
+    border-color: #e8a0a0;
 }
 
 
@@ -1037,9 +1054,7 @@ body {
 
 /* Dice Roller - collapsible */
 .dice-roller {
-    margin-top: 20px;
-    border-top: 1px solid #e0e0e0;
-    padding-top: 15px;
+    margin-bottom: 20px;
 }
 
 .dice-roller-header {
@@ -1161,6 +1176,141 @@ body {
     border-radius: 6px;
     font-weight: bold;
     color: #4a4a5a;
+}
+
+/* Save roll info display */
+.save-results-row {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 15px;
+}
+
+.save-info {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 15px;
+    padding: 10px 15px;
+    background: #e8e8f0;
+    border-radius: 6px;
+    border: 1px solid #c0c0d0;
+    flex: 1;
+}
+
+.save-info-text {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+.save-stat-name {
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #4a4a5a;
+}
+
+.save-target {
+    font-size: 1em;
+    color: #6a6a7a;
+}
+
+.save-modifiers {
+    display: flex;
+    gap: 8px;
+}
+
+.save-modifier-btn {
+    padding: 6px 12px;
+    border: 1px solid #c0c0d0;
+    border-radius: 4px;
+    background: white;
+    cursor: pointer;
+    font-size: 0.85em;
+    font-weight: 500;
+    color: #5a5a6a;
+    transition: all 0.2s;
+}
+
+.save-modifier-btn:hover {
+    background: #4a4a5a;
+    color: white;
+    border-color: #4a4a5a;
+}
+
+.save-modifier-btn.active {
+    background: #4a4a5a;
+    color: white;
+    border-color: #4a4a5a;
+}
+
+#advantageBtn.active {
+    background: #28a745;
+    border-color: #28a745;
+}
+
+#disadvantageBtn.active {
+    background: #dc3545;
+    border-color: #dc3545;
+}
+
+/* Save roll dice results - inline with save info */
+.dice-roller-content .dice-results.save-mode {
+    flex: 1;
+    margin-top: 0;
+}
+
+.dice-roller-content .dice-results.save-mode .dice-summary {
+    height: 100%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    flex-wrap: wrap;
+}
+
+/* Save result states */
+.dice-roller-content.save-success {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.dice-roller-content.save-success .save-info {
+    background: #c3e6cb;
+    border-color: #28a745;
+}
+
+.dice-roller-content.save-success .dice-summary {
+    background: #d4edda;
+    border-color: #28a745;
+}
+
+.dice-roller-content.save-fail {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.dice-roller-content.save-fail .save-info {
+    background: #f5c6cb;
+    border-color: #dc3545;
+}
+
+.dice-roller-content.save-fail .dice-summary {
+    background: #f8d7da;
+    border-color: #dc3545;
+}
+
+.save-result {
+    font-size: 1.2em;
+    font-weight: bold;
+    margin-left: 10px;
+}
+
+.save-result.success {
+    color: #155724;
+}
+
+.save-result.fail {
+    color: #721c24;
 }
 
 /* Item Selector Modal */
@@ -1319,6 +1469,77 @@ body {
     color: #8a8a9a;
 }
 
+/* Hireling Type Selector Modal */
+.hireling-type-modal {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: rgba(0, 0, 0, 0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.hireling-type-modal.active {
+    display: flex;
+}
+
+.hireling-type-content {
+    background: white;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+    max-height: 80vh;
+    overflow: hidden;
+    display: flex;
+    flex-direction: column;
+}
+
+.hireling-type-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    border-bottom: 1px solid #e0e0e0;
+    font-weight: bold;
+    font-size: 1.2em;
+    color: #4a4a5a;
+}
+
+.hireling-type-body {
+    overflow-y: auto;
+    padding: 10px;
+}
+
+.hireling-type-option {
+    padding: 12px 15px;
+    cursor: pointer;
+    border-radius: 6px;
+    color: #5a5a6a;
+    font-size: 1em;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 4px;
+}
+
+.hireling-type-option:hover {
+    background: #f0f0f0;
+    color: #4a4a5a;
+}
+
+.hireling-type-name {
+    font-weight: 500;
+}
+
+.hireling-type-wages {
+    font-size: 0.85em;
+    color: #8a8a9a;
+}
+
 /* Custom Dialog Modal */
 .custom-dialog-modal {
     display: none;
@@ -1442,8 +1663,9 @@ body {
 }
 
 .hireling-title {
-    font-family: 'UnifrakturMaguntia', 'Times New Roman', serif;
-    font-size: 1.8em;
+    font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+    font-size: 1.4em;
+    font-weight: bold;
     color: #4a4a5a;
 }
 
@@ -1510,8 +1732,8 @@ body {
 .hireling-stats {
     display: flex;
     flex-direction: column;
-    min-width: 160px;
-    max-width: 180px;
+    min-width: 240px;
+    max-width: 270px;
 }
 
 .hireling-stats-header {
@@ -1589,14 +1811,13 @@ body {
 .hireling-paw-column {
     display: flex;
     flex-direction: column;
-    width: 120px;
-    flex-shrink: 0;
+    flex: 1;
 }
 
 .hireling-pack-column {
     display: flex;
     flex-direction: column;
-    flex: 1;
+    flex: 2;
 }
 
 .hireling-paw-grid {

@@ -30,15 +30,6 @@ Spells are available in item selector, but spell casting mechanics are not:
   Fireball, Fear, Ghost Beetle, Light, Invisible Ring, Knock, Grease,
   Grow, Invisibility, Catnip
 
-BACKGROUND HIRELINGS (PARTIALLY IMPLEMENTED)
---------------------------------------------
-Some backgrounds provide hirelings, but these are not auto-created:
-- Loyal beetle (Beetleherd background)
-- Drunken torchbearer (Ale brewer background)
-- Pack rat (Merchant background)
-
-Players must manually add these hirelings using the Hirelings section.
-
 IMPLEMENTED FEATURES
 --------------------
 The following features ARE now implemented:

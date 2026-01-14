@@ -213,6 +213,7 @@ WEAPONS = {
 # Format: {"name": str, "price": str, "slots": int, "notes": str (optional)}
 INVENTORY_ITEMS = {
     "Weapons": [
+        {"name": "Improvised (d6)", "price": "1p", "slots": 1, "notes": "Twig, rock, etc."},
         {"name": "Needle (Light, d6)", "price": "10p", "slots": 1},
         {"name": "Dagger (Light, d6)", "price": "10p", "slots": 1},
         {"name": "Hatchet (Light, d6)", "price": "10p", "slots": 1},

@@ -1,19 +1,5 @@
 # Things that I'm planning to do
 
-## Inventory
-1) Improvised weapon slots - row 266
-
-## Weapons
-1) Select weapon background should be red.
-
-## Hirelings
-1) Number hirelings as they are created #1, #2 etc
-2) Sort out inventory alignment
-3) Some backgrounds provide hirelings. Create those hirelings automatically where they are shown:
-- Loyal beetle (Beetleherd background)
-- Drunken torchbearer (Ale brewer background)
-- Pack rat (Merchant background)
-
 ## Warbands
 1) Include in the same section as Hirelings? Review rules to see if they are equivalent.
 
@@ -23,12 +9,14 @@
 etc. 
 
 ## Dice roller
-1) Relevant success rolls. e.g., against strength. Move dice icon to apply against relevant checks. Show success/fail
-2) Weapon attack similar
-3) Retain General dice roller but make it roll the check selected. The player can then look at the dice making up the result if they want (i) icon against the result takes the user to the dice section.
+1) Weapon attack similar
 
 ## Hit protection and damage
-1) Implement
+1) Attacks
+**Attacks always hit.** Roll your weapon’s die and do that much damage to an opponent, minus their armour.
+
+When an attack is **impaired**, such is firing into cover, or fighting while grappled, roll **d4** for damage regardless of weapon. When an attack is **enhanced** by a gambit or vulnerable opponent, roll **d12**.
+
 
 ## Spells
 1) Some backgrounds provide spells, but spell mechanics are not included:
@@ -36,7 +24,6 @@ etc.
 - Not implemented: Spell casting rules, spell dice, mishaps, dooms
 - Spell recharge mechanics not shown
 2) Impact of conditions (Exhausted, Frightened, Hungry, Injured, Drained, Freeform)
-
 
 ## General Rule review
 1) Look for rule exceptions not catered for by the current implementation

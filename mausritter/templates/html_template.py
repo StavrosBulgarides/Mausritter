@@ -29,6 +29,37 @@ def _build_generate_button() -> str:
     </div>"""
 
 
+def _build_dice_roller() -> str:
+    """Build the dice roller section."""
+    return """
+    <div class="dice-roller">
+        <div class="dice-roller-header" onclick="toggleDiceRoller()">
+            <span class="dice-roller-title">Dice Roller</span>
+            <span class="dice-roller-toggle" id="diceToggle">▼</span>
+        </div>
+        <div class="dice-roller-content" id="diceContent">
+            <div class="save-results-row" id="saveResultsRow" style="display: none;">
+                <div class="save-info" id="saveInfo">
+                    <div class="save-info-text">
+                        <span class="save-stat-name" id="saveStatName"></span>
+                        <span class="save-target" id="saveTarget"></span>
+                    </div>
+                    <div class="save-modifiers">
+                        <button class="save-modifier-btn" id="advantageBtn" onclick="rollWithAdvantage()" title="Roll 2d20, take lowest">Advantage</button>
+                        <button class="save-modifier-btn" id="disadvantageBtn" onclick="rollWithDisadvantage()" title="Roll 2d20, take highest">Disadvantage</button>
+                    </div>
+                </div>
+                <div class="dice-results save-mode" id="saveRollResults"></div>
+            </div>
+            <div class="dice-input-section">
+                <input type="text" class="dice-input" id="diceInput" placeholder="e.g., 2d6, 4d20" value="2d6" />
+                <button class="roll-btn" onclick="manualRollDice()">Roll Dice</button>
+            </div>
+            <div class="dice-results" id="diceResults"></div>
+        </div>
+    </div>"""
+
+
 def _build_header_section(character: Dict[str, Any]) -> str:
     """Build the header section with name, background, and appearance."""
     appearance = character["appearance"]
@@ -90,17 +121,17 @@ def _build_middle_section(character: Dict[str, Any]) -> str:
                         </div>
                         <div class="attributes-table">
                             <div class="attribute-row">
-                                <span class="attribute-label">STR</span>
+                                <span class="attribute-label save-btn" onclick="rollSave('STR')" title="Click to roll STR save">STR</span>
                                 <input type="number" value="{attrs['STR']['max']}" min="1" max="12" />
                                 <input type="number" value="{attrs['STR']['current']}" min="0" max="12" />
                             </div>
                             <div class="attribute-row">
-                                <span class="attribute-label">DEX</span>
+                                <span class="attribute-label save-btn" onclick="rollSave('DEX')" title="Click to roll DEX save">DEX</span>
                                 <input type="number" value="{attrs['DEX']['max']}" min="1" max="12" />
                                 <input type="number" value="{attrs['DEX']['current']}" min="0" max="12" />
                             </div>
                             <div class="attribute-row">
-                                <span class="attribute-label">WIL</span>
+                                <span class="attribute-label save-btn" onclick="rollSave('WIL')" title="Click to roll WIL save">WIL</span>
                                 <input type="number" value="{attrs['WIL']['max']}" min="1" max="12" />
                                 <input type="number" value="{attrs['WIL']['current']}" min="0" max="12" />
                             </div>
@@ -464,17 +495,14 @@ def _build_footer() -> str:
         </div>
     </div>
 
-    <div class="dice-roller">
-        <div class="dice-roller-header" onclick="toggleDiceRoller()">
-            <span class="dice-roller-title">Dice Roller</span>
-            <span class="dice-roller-toggle" id="diceToggle">▼</span>
-        </div>
-        <div class="dice-roller-content" id="diceContent">
-            <div class="dice-input-section">
-                <input type="text" class="dice-input" id="diceInput" placeholder="e.g., 2d6, 4d20" value="2d6" />
-                <button class="roll-btn" onclick="rollDice()">Roll Dice</button>
+    <div class="hireling-type-modal" id="hirelingTypeModal">
+        <div class="hireling-type-content">
+            <div class="hireling-type-header">
+                <span>Hire a...</span>
+                <button class="close-modal" onclick="closeHirelingTypeSelector()">&times;</button>
             </div>
-            <div class="dice-results" id="diceResults"></div>
+            <div class="hireling-type-body" id="hirelingTypeBody">
+            </div>
         </div>
     </div>
 
@@ -504,6 +532,7 @@ def create_html_character_sheet(character: Dict[str, Any], output_path: Path) ->
         '    <div class="character-sheet">',
         _build_generate_button(),
         _build_header_section(character),
+        _build_dice_roller(),
         _build_middle_section(character),
         _build_inventory_section(character),
         _build_bottom_section(character),

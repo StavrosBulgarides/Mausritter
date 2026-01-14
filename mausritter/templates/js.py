@@ -205,19 +205,45 @@ def get_javascript_code() -> str:
                 pawSlots[0].classList.add('needs-selection');
             }}
 
-            // Check if any items are armor for body slots
+            // Check if any items are armor for body/paw slots
             const packItems = [];
-            const armorKeywords = ['armour', 'armor', 'jerkin'];
             let bodySlotIdx = 0;
 
             // Process background items (itemA and itemB at indices 3 and 4)
             [charData.equipment[3], charData.equipment[4]].forEach(item => {{
                 if (item) {{
-                    const isArmor = armorKeywords.some(kw => item.toLowerCase().includes(kw));
                     const formattedItem = formatItemText(item);
-                    if (isArmor && bodySlotIdx < 2) {{
-                        bodySlots[bodySlotIdx].value = formattedItem;
-                        bodySlotIdx++;
+                    const isLightArmour = item.toLowerCase().includes('light armour');
+                    const isHeavyArmour = item.toLowerCase().includes('heavy armour');
+
+                    if (isLightArmour) {{
+                        // Light armour goes in 1 paw slot + 1 body slot (same row)
+                        // Use off paw (slot 1) so main paw can have weapon, paired with body slot 1
+                        if (pawSlots[1]) {{
+                            pawSlots[1].value = formattedItem;
+                            const pawSlot = pawSlots[1].closest('.inventory-slot');
+                            if (pawSlot) {{
+                                pawSlot.classList.add('two-slot-item', 'light-armour-slot');
+                            }}
+                        }}
+                        if (bodySlots[1]) {{
+                            bodySlots[1].value = formattedItem;
+                            bodySlots[1].readOnly = true;
+                            const bodySlot = bodySlots[1].closest('.inventory-slot');
+                            if (bodySlot) {{
+                                bodySlot.classList.add('two-slot-secondary', 'light-armour-slot');
+                            }}
+                        }}
+                    }} else if (isHeavyArmour && bodySlotIdx < 2) {{
+                        // Heavy armour takes both body slots
+                        bodySlots[0].value = formattedItem;
+                        bodySlots[1].value = formattedItem;
+                        bodySlots[1].readOnly = true;
+                        const bodySlot0 = bodySlots[0].closest('.inventory-slot');
+                        const bodySlot1 = bodySlots[1].closest('.inventory-slot');
+                        if (bodySlot0) bodySlot0.classList.add('two-slot-item');
+                        if (bodySlot1) bodySlot1.classList.add('two-slot-secondary');
+                        bodySlotIdx = 2; // Both body slots used
                     }} else {{
                         packItems.push(formattedItem);
                     }}
@@ -260,6 +286,12 @@ def get_javascript_code() -> str:
 
             // Update slot empty states
             updateAllSlotEmptyStates();
+
+            // Clear existing hirelings and create background-specific hireling if applicable
+            clearAllHirelings();
+            if (BACKGROUND_HIRELINGS[charData.background]) {{
+                addHirelingWithType(BACKGROUND_HIRELINGS[charData.background]);
+            }}
         }}
 
         function showNewCharacterDialog(charData) {{
@@ -408,21 +440,172 @@ def get_javascript_code() -> str:
             }});
         }}
 
+        // Save roll state
+        let currentSaveRoll = null;
+
         function showDiceSummary(results, diceData) {{
-            const resultsDiv = document.getElementById('diceResults');
             const total = results.reduce((a, b) => a + b, 0) + diceData.modifier;
+            const diceContent = document.getElementById('diceContent');
+
+            // Determine which results div to use
+            const resultsDiv = currentSaveRoll
+                ? document.getElementById('saveRollResults')
+                : document.getElementById('diceResults');
 
             const summary = document.createElement('div');
             summary.className = 'dice-summary';
 
-            let summaryText = 'Rolled: ' + results.join(', ');
-            if (diceData.modifier !== 0) {{
-                summaryText += ' ' + (diceData.modifier > 0 ? '+' : '') + diceData.modifier;
+            let summaryText = '';
+
+            // Check if this is a save roll
+            if (currentSaveRoll) {{
+                let effectiveResult = total;
+                let rollDisplay = '';
+
+                // Handle advantage/disadvantage
+                if (currentSaveRoll.modifier && results.length === 2) {{
+                    if (currentSaveRoll.modifier === 'advantage') {{
+                        // Take lowest
+                        effectiveResult = Math.min(results[0], results[1]);
+                        const usedIndex = results[0] <= results[1] ? 0 : 1;
+                        rollDisplay = results.map((r, i) =>
+                            i === usedIndex ? '<strong>' + r + '</strong>' : '<span style="opacity:0.5;text-decoration:line-through">' + r + '</span>'
+                        ).join(', ');
+                    }} else if (currentSaveRoll.modifier === 'disadvantage') {{
+                        // Take highest
+                        effectiveResult = Math.max(results[0], results[1]);
+                        const usedIndex = results[0] >= results[1] ? 0 : 1;
+                        rollDisplay = results.map((r, i) =>
+                            i === usedIndex ? '<strong>' + r + '</strong>' : '<span style="opacity:0.5;text-decoration:line-through">' + r + '</span>'
+                        ).join(', ');
+                    }}
+                    summaryText = '<span class="total">Rolled: ' + rollDisplay + ' = ' + effectiveResult + '</span>';
+                }} else {{
+                    summaryText = '<span class="total">Rolled: ' + effectiveResult + '</span>';
+                }}
+
+                const isSuccess = effectiveResult <= currentSaveRoll.target;
+                if (isSuccess) {{
+                    summaryText += '<span class="save-result success"> — Success!</span>';
+                    diceContent.classList.remove('save-fail');
+                    diceContent.classList.add('save-success');
+                }} else {{
+                    summaryText += '<span class="save-result fail"> — Fail!</span>';
+                    diceContent.classList.remove('save-success');
+                    diceContent.classList.add('save-fail');
+                }}
+            }} else {{
+                summaryText = 'Rolled: ' + results.join(', ');
+                if (diceData.modifier !== 0) {{
+                    summaryText += ' ' + (diceData.modifier > 0 ? '+' : '') + diceData.modifier;
+                }}
+                summaryText += '<br><span class="total">Total: ' + total + '</span>';
             }}
-            summaryText += '<br><span class="total">Total: ' + total + '</span>';
 
             summary.innerHTML = summaryText;
             resultsDiv.appendChild(summary);
+        }}
+
+        function clearSaveState() {{
+            currentSaveRoll = null;
+            const saveResultsRow = document.getElementById('saveResultsRow');
+            const diceContent = document.getElementById('diceContent');
+            const diceResults = document.getElementById('diceResults');
+            if (saveResultsRow) saveResultsRow.style.display = 'none';
+            if (diceResults) diceResults.style.display = 'block';
+            if (diceContent) {{
+                diceContent.classList.remove('save-success', 'save-fail');
+            }}
+        }}
+
+        function manualRollDice() {{
+            // Clear save state when user manually rolls
+            clearSaveState();
+            rollDice();
+        }}
+
+        function rollSave(stat, modifier = null) {{
+            // Get current stat value
+            const attrRows = document.querySelectorAll('.attribute-row');
+            let targetValue = 10;
+
+            attrRows.forEach(row => {{
+                const label = row.querySelector('.attribute-label');
+                if (label && label.textContent === stat) {{
+                    const inputs = row.querySelectorAll('input[type="number"]');
+                    if (inputs.length >= 2) {{
+                        targetValue = parseInt(inputs[1].value) || 10; // Current value
+                    }}
+                }}
+            }});
+
+            // Set up save state
+            currentSaveRoll = {{
+                stat: stat,
+                target: targetValue,
+                modifier: modifier // 'advantage', 'disadvantage', or null
+            }};
+
+            // Update button states
+            const advBtn = document.getElementById('advantageBtn');
+            const disBtn = document.getElementById('disadvantageBtn');
+            if (advBtn) advBtn.classList.toggle('active', modifier === 'advantage');
+            if (disBtn) disBtn.classList.toggle('active', modifier === 'disadvantage');
+
+            // Update save info display
+            const saveResultsRow = document.getElementById('saveResultsRow');
+            const saveStatName = document.getElementById('saveStatName');
+            const saveTarget = document.getElementById('saveTarget');
+            const saveRollResults = document.getElementById('saveRollResults');
+            const diceResults = document.getElementById('diceResults');
+
+            if (saveResultsRow && saveStatName && saveTarget) {{
+                saveStatName.textContent = stat + ' Save';
+                saveTarget.textContent = 'Target: ≤' + targetValue;
+                saveResultsRow.style.display = 'flex';
+            }}
+
+            // Clear both results areas (dice graphics will show in diceResults, summary in saveRollResults)
+            if (diceResults) {{
+                diceResults.style.display = 'block';
+                diceResults.innerHTML = '';
+            }}
+            if (saveRollResults) saveRollResults.innerHTML = '';
+
+            // Set dice notation based on modifier
+            const diceInput = document.getElementById('diceInput');
+            if (diceInput) {{
+                diceInput.value = modifier ? '2d20' : '1d20';
+            }}
+
+            // Clear previous result state
+            const diceContent = document.getElementById('diceContent');
+            if (diceContent) {{
+                diceContent.classList.remove('save-success', 'save-fail');
+            }}
+
+            // Open dice roller if not already open
+            const content = document.getElementById('diceContent');
+            const toggle = document.getElementById('diceToggle');
+            if (content && !content.classList.contains('active')) {{
+                content.classList.add('active');
+                if (toggle) toggle.textContent = '▲';
+            }}
+
+            // Auto-roll the dice
+            rollDice();
+        }}
+
+        function rollWithAdvantage() {{
+            if (currentSaveRoll) {{
+                rollSave(currentSaveRoll.stat, 'advantage');
+            }}
+        }}
+
+        function rollWithDisadvantage() {{
+            if (currentSaveRoll) {{
+                rollSave(currentSaveRoll.stat, 'disadvantage');
+            }}
         }}
 
         function isTorchOrLantern(slot) {{
@@ -512,7 +695,27 @@ def get_javascript_code() -> str:
                 let pairedSlot = null;
                 if (slot.classList.contains('two-slot-item')) {{
                     const parentGrid = slot.parentElement;
-                    if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
+                    const isLightArmour = slot.classList.contains('light-armour-slot');
+
+                    if (isLightArmour) {{
+                        // Light armour: find paired slot across paw/body grids by row position
+                        const pawGrid = document.querySelector('.paw-grid');
+                        const bodyGrid = document.querySelector('.body-grid');
+
+                        if (parentGrid.classList.contains('paw-grid')) {{
+                            // Get same-row body slot
+                            const pawSlots = pawGrid.querySelectorAll('.inventory-slot');
+                            const currentIndex = Array.from(pawSlots).indexOf(slot);
+                            const bodySlots = bodyGrid.querySelectorAll('.inventory-slot');
+                            pairedSlot = bodySlots[currentIndex];
+                        }} else if (parentGrid.classList.contains('body-grid')) {{
+                            // Get same-row paw slot
+                            const bodySlots = bodyGrid.querySelectorAll('.inventory-slot');
+                            const currentIndex = Array.from(bodySlots).indexOf(slot);
+                            const pawSlots = pawGrid.querySelectorAll('.inventory-slot');
+                            pairedSlot = pawSlots[currentIndex];
+                        }}
+                    }} else if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
                         const slots = parentGrid.querySelectorAll('.inventory-slot');
                         const currentIndex = Array.from(slots).indexOf(slot);
                         pairedSlot = slots[currentIndex === 0 ? 1 : 0];
@@ -542,6 +745,11 @@ def get_javascript_code() -> str:
             }});
             document.querySelectorAll('.inventory-slot').forEach(slot => {{
                 slot.classList.remove('depleted');
+                slot.classList.remove('two-slot-item');
+                slot.classList.remove('two-slot-secondary');
+                slot.classList.remove('light-armour-slot');
+                const textarea = slot.querySelector('.slot-content textarea');
+                if (textarea) textarea.readOnly = false;
             }});
         }}
 
@@ -692,7 +900,31 @@ def get_javascript_code() -> str:
                     let pairedSlot = null;
                     const parentGrid = currentTargetSlot.parentElement;
 
-                    if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
+                    // Check if this is light armour (uses 1 paw + 1 body)
+                    const isLightArmour = itemName.toLowerCase().includes('light armour');
+
+                    if (isLightArmour) {{
+                        // Light armour: pair across paw and body grids by row position
+                        const pawGrid = document.querySelector('.paw-grid');
+                        const bodyGrid = document.querySelector('.body-grid');
+
+                        if (parentGrid.classList.contains('paw-grid')) {{
+                            // Currently in paw slot, pair with same-row body slot
+                            const pawSlots = pawGrid.querySelectorAll('.inventory-slot');
+                            const currentIndex = Array.from(pawSlots).indexOf(currentTargetSlot);
+                            const bodySlots = bodyGrid.querySelectorAll('.inventory-slot');
+                            pairedSlot = bodySlots[currentIndex]; // Same row position
+                        }} else if (parentGrid.classList.contains('body-grid')) {{
+                            // Currently in body slot, pair with same-row paw slot
+                            const bodySlots = bodyGrid.querySelectorAll('.inventory-slot');
+                            const currentIndex = Array.from(bodySlots).indexOf(currentTargetSlot);
+                            const pawSlots = pawGrid.querySelectorAll('.inventory-slot');
+                            pairedSlot = pawSlots[currentIndex]; // Same row position
+                        }}
+
+                        // Mark as light armour for special handling during clear
+                        currentTargetSlot.classList.add('light-armour-slot');
+                    }} else if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
                         // For paw/body grids, pair with the other slot in the same grid
                         const slots = parentGrid.querySelectorAll('.inventory-slot');
                         const currentIndex = Array.from(slots).indexOf(currentTargetSlot);
@@ -712,15 +944,21 @@ def get_javascript_code() -> str:
                         if (pairedTextarea) {{
                             pairedTextarea.value = itemText;
                             pairedTextarea.readOnly = true;
+                            pairedTextarea.classList.remove('needs-selection');
                         }}
                         // Reset paired slot markers
                         const pairedMarkers = pairedSlot.querySelectorAll('.usage-marker');
                         pairedMarkers.forEach(m => {{ m.classList.remove('used'); m.classList.remove('half-used'); }});
                         pairedSlot.classList.remove('depleted');
                         pairedSlot.classList.add('two-slot-secondary');
+                        if (isLightArmour) {{
+                            pairedSlot.classList.add('light-armour-slot');
+                        }}
+                        updateSlotEmptyState(pairedSlot);
 
                         // Set up mirroring from primary to secondary
-                        textarea.dataset.pairedSlotIndex = Array.from(parentGrid.querySelectorAll('.inventory-slot')).indexOf(pairedSlot);
+                        textarea.dataset.pairedSlotId = pairedSlot.dataset.slotId || Array.from(pairedSlot.parentElement.querySelectorAll('.inventory-slot')).indexOf(pairedSlot);
+                        textarea.dataset.pairedGridType = pairedSlot.parentElement.classList.contains('paw-grid') ? 'paw' : (pairedSlot.parentElement.classList.contains('body-grid') ? 'body' : 'pack');
                         textarea.oninput = function() {{
                             pairedTextarea.value = this.value;
                         }};
@@ -752,10 +990,30 @@ def get_javascript_code() -> str:
             // Check if this is part of a two-slot item and clear the paired slot
             const parentGrid = slot.parentElement;
             const isTwoSlot = slot.classList.contains('two-slot-item') || slot.classList.contains('two-slot-secondary');
+            const isLightArmour = slot.classList.contains('light-armour-slot');
 
             if (isTwoSlot) {{
                 let pairedSlot = null;
-                if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
+
+                if (isLightArmour) {{
+                    // Light armour: find paired slot across paw/body grids by row position
+                    const pawGrid = document.querySelector('.paw-grid');
+                    const bodyGrid = document.querySelector('.body-grid');
+
+                    if (parentGrid.classList.contains('paw-grid')) {{
+                        // Get same-row body slot
+                        const pawSlots = pawGrid.querySelectorAll('.inventory-slot');
+                        const currentIndex = Array.from(pawSlots).indexOf(slot);
+                        const bodySlots = bodyGrid.querySelectorAll('.inventory-slot');
+                        pairedSlot = bodySlots[currentIndex];
+                    }} else if (parentGrid.classList.contains('body-grid')) {{
+                        // Get same-row paw slot
+                        const bodySlots = bodyGrid.querySelectorAll('.inventory-slot');
+                        const currentIndex = Array.from(bodySlots).indexOf(slot);
+                        const pawSlots = pawGrid.querySelectorAll('.inventory-slot');
+                        pairedSlot = pawSlots[currentIndex];
+                    }}
+                }} else if (parentGrid.classList.contains('paw-grid') || parentGrid.classList.contains('body-grid')) {{
                     const slots = parentGrid.querySelectorAll('.inventory-slot');
                     const currentIndex = Array.from(slots).indexOf(slot);
                     pairedSlot = slots[currentIndex === 0 ? 1 : 0];
@@ -777,8 +1035,12 @@ def get_javascript_code() -> str:
                     pairedSlot.classList.remove('depleted');
                     pairedSlot.classList.remove('two-slot-item');
                     pairedSlot.classList.remove('two-slot-secondary');
+                    pairedSlot.classList.remove('light-armour-slot');
+                    updateSlotEmptyState(pairedSlot);
                 }}
             }}
+
+            slot.classList.remove('light-armour-slot');
 
             // Remove mirroring and readonly
             if (textarea) {{
@@ -987,11 +1249,12 @@ def get_javascript_code() -> str:
             `;
         }}
 
-        function createHirelingCardHTML(hirelingId, stats) {{
+        function createHirelingCardHTML(hirelingId, stats, displayNumber, hirelingType) {{
+            const titleText = hirelingType || 'Hireling';
             return `
-                <div class="hireling-card" id="hireling-${{hirelingId}}" data-hireling-id="${{hirelingId}}">
+                <div class="hireling-card" id="hireling-${{hirelingId}}" data-hireling-id="${{hirelingId}}" data-hireling-type="${{titleText}}">
                     <div class="hireling-card-header">
-                        <span class="hireling-title">Hireling</span>
+                        <span class="hireling-title"><span class="hireling-title-text">${{titleText}}</span> <span class="hireling-number">#${{displayNumber}}</span></span>
                         <button class="hireling-remove-btn" onclick="removeHireling(${{hirelingId}})">-</button>
                     </div>
                     <div class="hireling-info-row">
@@ -1055,10 +1318,13 @@ def get_javascript_code() -> str:
             `;
         }}
 
-        function addHireling() {{
+        // Internal function to add hireling with type
+        function addHirelingWithType(hirelingType) {{
             hirelingCounter++;
             const stats = generateHirelingStats();
-            const cardHTML = createHirelingCardHTML(hirelingCounter, stats);
+            // Display number is count of hirelings of this type + 1
+            const displayNumber = getHirelingTypeCount(hirelingType) + 1;
+            const cardHTML = createHirelingCardHTML(hirelingCounter, stats, displayNumber, hirelingType);
 
             const container = document.getElementById('hirelingsContainer');
             container.insertAdjacentHTML('beforeend', cardHTML);
@@ -1068,11 +1334,85 @@ def get_javascript_code() -> str:
             setupHirelingStatListeners(hirelingCard);
         }}
 
+        // Public function - opens the hireling type selector
+        function addHireling() {{
+            openHirelingTypeSelector();
+        }}
+
+        function getHirelingTypeCount(hirelingType) {{
+            return document.querySelectorAll(`.hireling-card[data-hireling-type="${{hirelingType}}"]`).length;
+        }}
+
+        function openHirelingTypeSelector() {{
+            buildHirelingTypeList();
+            document.getElementById('hirelingTypeModal').classList.add('active');
+        }}
+
+        function closeHirelingTypeSelector() {{
+            document.getElementById('hirelingTypeModal').classList.remove('active');
+        }}
+
+        function buildHirelingTypeList() {{
+            const body = document.getElementById('hirelingTypeBody');
+            body.innerHTML = '';
+
+            HIRELING_TYPES.forEach(hireling => {{
+                const option = document.createElement('div');
+                option.className = 'hireling-type-option';
+                option.onclick = function() {{
+                    selectHirelingType(hireling.type);
+                }};
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'hireling-type-name';
+                nameSpan.textContent = hireling.type;
+
+                const wagesSpan = document.createElement('span');
+                wagesSpan.className = 'hireling-type-wages';
+                wagesSpan.textContent = hireling.wages;
+
+                option.appendChild(nameSpan);
+                option.appendChild(wagesSpan);
+                body.appendChild(option);
+            }});
+        }}
+
+        function selectHirelingType(hirelingType) {{
+            closeHirelingTypeSelector();
+            addHirelingWithType(hirelingType);
+        }}
+
+        // Background to hireling mapping
+        const BACKGROUND_HIRELINGS = {{
+            'Beetleherd': 'Loyal beetle',
+            'Ale brewer': 'Drunken torchbearer',
+            'Merchant': 'Pack rat'
+        }};
+
+        function clearAllHirelings() {{
+            const container = document.getElementById('hirelingsContainer');
+            container.innerHTML = '';
+            hirelingCounter = 0;
+        }}
+
         function removeHireling(hirelingId) {{
             const card = document.getElementById('hireling-' + hirelingId);
             if (card) {{
+                const hirelingType = card.dataset.hirelingType;
                 card.remove();
+                renumberHirelingsByType(hirelingType);
             }}
+        }}
+
+        function renumberHirelingsByType(hirelingType) {{
+            // Get all remaining hireling cards of this type and update their display numbers
+            const hirelingCards = document.querySelectorAll(`.hireling-card[data-hireling-type="${{hirelingType}}"]`);
+            hirelingCards.forEach((card, index) => {{
+                const numberSpan = card.querySelector('.hireling-number');
+                if (numberSpan) {{
+                    numberSpan.textContent = '#' + (index + 1);
+                }}
+            }});
         }}
 
         function setupHirelingStatListeners(hirelingCard) {{
@@ -1322,6 +1662,10 @@ def get_javascript_code() -> str:
         window.toggleInventory = toggleInventory;
         window.toggleSection = toggleSection;
         window.rollDice = rollDice;
+        window.rollSave = rollSave;
+        window.manualRollDice = manualRollDice;
+        window.rollWithAdvantage = rollWithAdvantage;
+        window.rollWithDisadvantage = rollWithDisadvantage;
         window.toggleUsage = toggleUsage;
         window.resetUsageMarkers = resetUsageMarkers;
         window.openItemSelector = openItemSelector;
@@ -1334,6 +1678,7 @@ def get_javascript_code() -> str:
         window.closeGritAlert = closeGritAlert;
         window.addHireling = addHireling;
         window.removeHireling = removeHireling;
+        window.closeHirelingTypeSelector = closeHirelingTypeSelector;
         window.openHirelingItemSelector = openHirelingItemSelector;
         window.clearHirelingSlot = clearHirelingSlot;
         window.toggleHirelingUsage = toggleHirelingUsage;
@@ -1345,8 +1690,12 @@ def get_javascript_code() -> str:
             if (diceInput) {{
                 diceInput.addEventListener('keypress', function(e) {{
                     if (e.key === 'Enter') {{
-                        rollDice();
+                        manualRollDice();
                     }}
+                }});
+                // Clear save state when user starts typing in dice input
+                diceInput.addEventListener('input', function() {{
+                    clearSaveState();
                 }});
             }} else {{
                 console.error('Could not find diceInput');
