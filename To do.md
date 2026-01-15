@@ -33,23 +33,28 @@ When an attack is **impaired**, such is firing into cover, or fighting while gra
 1) Look for rule exceptions not catered for by the current implementation
 
 ## GM view / LAN implementation
-1) GM should be able to see the character sheets of each individual player - with a  summary page and the ability to navigate to other pages from this, and to be able to make changes to the sheet. Determine how this will work in practice prior to implementation, looking to other projects for inspiration. Suggestion is Flask app and local area LAN
-2) GM turn tracker
-3) GM Condition tracking - flag all conditions applied
-4) GM only notes
-5) GM sharing area - share content with players. One/all. Maps, letters etc.
-5) Set advantages/disadvantages for a player
-6) Run fights
 
-### High-level approach
-Create a small local web server: Python backend (Flask)
-One server runs on the GM’s machine
-Players connect via browser over LAN
+### Completed
+- [x] Flask-based local server (`python run_server.py`)
+- [x] GM Dashboard with character overview
+- [x] Player join page (no authentication required)
+- [x] Full character sheet for players and GM (with all features: usage markers, item selector, dice roller, etc.)
+- [x] GM can view/edit all character sheets
+- [x] Players can edit their own character sheets
+- [x] Auto-save to server on changes
+- [x] Session save/load (JSON files)
+- [x] New session (clear all)
+- [x] Stop server button
+- [x] GM condition tracking - add/remove conditions from dashboard
+- [x] Player tokens for character access
 
-Each character has:
-a private player view
-a GM view / dashboard that allows them to view and amend player pages (e.g., add conditions)
-No accounts, no internet, no cloud, no heavy auth.
+### To Do
+-) Some data is not preserved on a cycle from GM -> Player (update) -> GM. This needs to be resolved to ensure data preservation for all data types.
+1) GM turn tracker / initiative order
+2) GM only notes (per character and session-wide)
+3) GM sharing area - share content with players (maps, letters, etc.)
+4) Set advantages/disadvantages for a player
+5) Run fights / combat tracker
 
 ### Aesthetics
 1) Design a nicer background - suggest coloured banner that GM can select and acts as the colour key for the GM screen

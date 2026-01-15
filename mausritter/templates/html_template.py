@@ -519,18 +519,28 @@ def _build_footer() -> str:
 </html>"""
 
 
-def create_html_character_sheet(character: Dict[str, Any], output_path: Path) -> None:
-    """Create an editable HTML character sheet.
+def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool = False, token: str = "") -> str:
+    """Generate character sheet HTML as a string.
 
     Args:
         character: Dictionary containing character data
-        output_path: Path to write the HTML file
+        server_mode: If True, adds server connectivity JavaScript
+        token: Player token for server API authentication
+
+    Returns:
+        HTML string for the character sheet
     """
     html_parts = [
         _build_head(character["name"]),
         "<body>",
         '    <div class="character-sheet">',
-        _build_generate_button(),
+    ]
+
+    # In server mode, don't show "Generate New Character" button
+    if not server_mode:
+        html_parts.append(_build_generate_button())
+
+    html_parts.extend([
         _build_header_section(character),
         _build_dice_roller(),
         _build_middle_section(character),
@@ -538,9 +548,264 @@ def create_html_character_sheet(character: Dict[str, Any], output_path: Path) ->
         _build_bottom_section(character),
         _build_hirelings_section(),
         _build_footer(),
-    ]
+    ])
 
-    html_content = "\n".join(html_parts)
+    # Add server connectivity script if in server mode
+    if server_mode and token:
+        server_script = f"""
+    <script>
+        // Server connectivity - auto-save changes
+        const API_TOKEN = '{token}';
+        const CHARACTER_ID = '{character.get("id", "")}';
+
+        function debounce(func, wait) {{
+            let timeout;
+            return function(...args) {{
+                clearTimeout(timeout);
+                timeout = setTimeout(() => func.apply(this, args), wait);
+            }};
+        }}
+
+        function getStatFromRow(statName) {{
+            // Find the attribute row by looking for the span with the stat name
+            const rows = document.querySelectorAll('.attribute-row');
+            for (const row of rows) {{
+                const label = row.querySelector('.attribute-label');
+                if (label && label.textContent.trim() === statName) {{
+                    const inputs = row.querySelectorAll('input[type="number"]');
+                    if (inputs.length >= 2) {{
+                        return {{
+                            max: parseInt(inputs[0].value) || 0,
+                            current: parseInt(inputs[1].value) || 0
+                        }};
+                    }}
+                }}
+            }}
+            return {{ max: 0, current: 0 }};
+        }}
+
+        function getHpValues() {{
+            const hpRow = document.querySelector('.hp-row');
+            if (hpRow) {{
+                const inputs = hpRow.querySelectorAll('input[type="number"]');
+                if (inputs.length >= 2) {{
+                    return {{
+                        max: parseInt(inputs[0].value) || 0,
+                        current: parseInt(inputs[1].value) || 0
+                    }};
+                }}
+            }}
+            return {{ max: 0, current: 0 }};
+        }}
+
+        function getInventory() {{
+            const inventory = {{
+                main_paw: '',
+                off_paw: '',
+                body: ['', ''],
+                pack: ['', '', '', '', '', '']
+            }};
+
+            // Paw slots - first two .paw-slot elements
+            const pawSlots = document.querySelectorAll('.paw-slot .slot-content textarea');
+            if (pawSlots[0]) inventory.main_paw = pawSlots[0].value || '';
+            if (pawSlots[1]) inventory.off_paw = pawSlots[1].value || '';
+
+            // Body slots
+            const bodySlots = document.querySelectorAll('.body-slot .slot-content textarea');
+            bodySlots.forEach((textarea, i) => {{
+                if (i < 2) inventory.body[i] = textarea.value || '';
+            }});
+
+            // Pack slots
+            const packSlots = document.querySelectorAll('.pack-slot .slot-content textarea');
+            packSlots.forEach((textarea, i) => {{
+                if (i < 6) inventory.pack[i] = textarea.value || '';
+            }});
+
+            return inventory;
+        }}
+
+        function getHirelings() {{
+            const hirelings = [];
+            const hirelingCards = document.querySelectorAll('.hireling-card');
+
+            hirelingCards.forEach(card => {{
+                const hireling = {{
+                    name: card.querySelector('.hireling-name-input')?.value || '',
+                    type: card.querySelector('.hireling-type-display')?.textContent || '',
+                    look: card.querySelector('.hireling-look-input')?.value || '',
+                    disposition: card.querySelector('.hireling-disposition-input')?.value || '',
+                    attributes: {{}},
+                    hp: {{}},
+                    inventory: {{
+                        paws: ['', ''],
+                        pack: ['', '', '', '']
+                    }}
+                }};
+
+                // Get hireling stats
+                const statRows = card.querySelectorAll('.hireling-attribute-row');
+                statRows.forEach(row => {{
+                    const label = row.querySelector('.hireling-attribute-label')?.textContent?.trim();
+                    const inputs = row.querySelectorAll('input[type="number"]');
+                    if (label && inputs.length >= 2) {{
+                        hireling.attributes[label] = {{
+                            max: parseInt(inputs[0].value) || 0,
+                            current: parseInt(inputs[1].value) || 0
+                        }};
+                    }}
+                }});
+
+                // Get hireling HP
+                const hpRow = card.querySelector('.hireling-hp-row');
+                if (hpRow) {{
+                    const inputs = hpRow.querySelectorAll('input[type="number"]');
+                    if (inputs.length >= 2) {{
+                        hireling.hp = {{
+                            max: parseInt(inputs[0].value) || 0,
+                            current: parseInt(inputs[1].value) || 0
+                        }};
+                    }}
+                }}
+
+                // Get hireling inventory
+                const pawSlots = card.querySelectorAll('.hireling-paw-slot .slot-content textarea');
+                pawSlots.forEach((textarea, i) => {{
+                    if (i < 2) hireling.inventory.paws[i] = textarea.value || '';
+                }});
+
+                const packSlots = card.querySelectorAll('.hireling-pack-slot .slot-content textarea');
+                packSlots.forEach((textarea, i) => {{
+                    if (i < 4) hireling.inventory.pack[i] = textarea.value || '';
+                }});
+
+                hirelings.push(hireling);
+            }});
+
+            return hirelings;
+        }}
+
+        async function saveToServer() {{
+            if (!CHARACTER_ID) return;
+
+            // Collect current character state from DOM
+            const data = {{
+                name: document.querySelector('.name-input')?.value || '',
+                background: document.querySelector('.background-input')?.value || '',
+                attributes: {{
+                    STR: getStatFromRow('STR'),
+                    DEX: getStatFromRow('DEX'),
+                    WIL: getStatFromRow('WIL')
+                }},
+                hp: getHpValues(),
+                pips: parseInt(document.querySelector('.pips-input')?.value) || 0,
+                grit: parseInt(document.querySelector('.grit-input')?.value) || 0,
+                level: parseInt(document.querySelector('.level-row input')?.value) || 1,
+                xp: parseInt(document.querySelector('.xp-row input')?.value) || 0,
+                inventory: getInventory(),
+                hirelings: getHirelings()
+            }};
+
+            // Get appearance fields
+            const appearanceInputs = document.querySelectorAll('.appearance-row input');
+            if (appearanceInputs.length >= 3) {{
+                data.appearance = {{
+                    birthsign: appearanceInputs[0]?.value || '',
+                    coat: appearanceInputs[1]?.value || '',
+                    look: appearanceInputs[2]?.value || ''
+                }};
+            }}
+
+            // Get banked items
+            const bankedTextarea = document.querySelector('.banked-box textarea');
+            if (bankedTextarea) {{
+                data.banked = {{
+                    items: bankedTextarea.value || '',
+                    pips: 0
+                }};
+            }}
+
+            // Get notes/portrait
+            const portraitTextarea = document.querySelector('.portrait-input');
+            if (portraitTextarea) {{
+                data.notes = portraitTextarea.value || '';
+            }}
+
+            try {{
+                const response = await fetch(`/api/characters/${{CHARACTER_ID}}?token=${{API_TOKEN}}`, {{
+                    method: 'PATCH',
+                    headers: {{'Content-Type': 'application/json'}},
+                    body: JSON.stringify(data)
+                }});
+                if (response.ok) {{
+                    showSaveIndicator();
+                }} else {{
+                    console.error('Save failed:', await response.text());
+                }}
+            }} catch (e) {{
+                console.error('Failed to save:', e);
+            }}
+        }}
+
+        const debouncedSave = debounce(saveToServer, 1000);
+
+        function showSaveIndicator() {{
+            let indicator = document.getElementById('server-save-indicator');
+            if (!indicator) {{
+                indicator = document.createElement('div');
+                indicator.id = 'server-save-indicator';
+                indicator.style.cssText = 'position:fixed;bottom:20px;right:20px;background:#4a7a4a;color:white;padding:10px 20px;border-radius:8px;opacity:0;transition:opacity 0.3s;z-index:9999;';
+                indicator.textContent = 'Saved!';
+                document.body.appendChild(indicator);
+            }}
+            indicator.style.opacity = '1';
+            setTimeout(() => {{ indicator.style.opacity = '0'; }}, 1500);
+        }}
+
+        // Attach save listeners to all inputs and textareas
+        document.addEventListener('DOMContentLoaded', () => {{
+            function attachListeners() {{
+                document.querySelectorAll('input, textarea').forEach(el => {{
+                    if (!el.dataset.saveListenerAttached) {{
+                        el.addEventListener('change', debouncedSave);
+                        el.addEventListener('blur', debouncedSave);
+                        el.addEventListener('input', debouncedSave);
+                        el.dataset.saveListenerAttached = 'true';
+                    }}
+                }});
+            }}
+
+            // Initial attachment
+            attachListeners();
+
+            // Watch for new elements (hirelings added dynamically)
+            const observer = new MutationObserver(() => {{
+                attachListeners();
+                debouncedSave();
+            }});
+
+            observer.observe(document.body, {{
+                childList: true,
+                subtree: true,
+                characterData: true
+            }});
+        }});
+    </script>
+"""
+        html_parts.append(server_script)
+
+    return "\n".join(html_parts)
+
+
+def create_html_character_sheet(character: Dict[str, Any], output_path: Path) -> None:
+    """Create an editable HTML character sheet.
+
+    Args:
+        character: Dictionary containing character data
+        output_path: Path to write the HTML file
+    """
+    html_content = generate_character_sheet_html(character, server_mode=False)
 
     with open(output_path, "w", encoding="utf-8") as f:
         f.write(html_content)

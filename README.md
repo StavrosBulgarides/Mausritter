@@ -1,12 +1,23 @@
 # Mausritter Character Generator
 
-A character generator and interactive character sheet for the Mausritter tabletop RPG.
+A character generator and interactive character sheet for the Mausritter tabletop RPG. Includes a GM server for multiplayer sessions over LAN.
 
 ## Quick Start
 
+### Standalone (Single Character)
 ```bash
 python3 main.py
 ```
+
+### GM Server (Multiplayer)
+```bash
+pip install flask  # First time only
+python3 run_server.py
+```
+
+The server displays two URLs on startup:
+- **GM Dashboard**: `http://192.168.x.x:5001/gm?token=...` (keep secret)
+- **Player Join**: `http://192.168.x.x:5001/join` (share with players)
 
 ## Features
 
@@ -17,6 +28,8 @@ python3 main.py
 - Conditions system with Grit-based ignoring
 - Hirelings section with full stats and inventory
 - Dice roller with custom notation
+- **GM Server**: Manage multiple players over local network
+- **Session Save/Load**: Preserve sessions as JSON files
 
 See [MAUSRITTER_README.md](MAUSRITTER_README.md) for detailed documentation.
 

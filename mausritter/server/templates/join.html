@@ -1,0 +1,85 @@
+{% extends "base.html" %}
+
+{% block title %}Join Game - Mausritter{% endblock %}
+
+{% block extra_styles %}
+.join-page {
+    max-width: 600px;
+    margin: 0 auto;
+    text-align: center;
+}
+
+.join-page h1 {
+    margin-bottom: 30px;
+}
+
+.character-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+    margin-top: 20px;
+}
+
+.character-option {
+    background: white;
+    padding: 20px 30px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.character-option:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+}
+
+.character-name {
+    font-size: 1.3em;
+    font-weight: bold;
+}
+
+.no-characters {
+    color: #6a6a7a;
+    padding: 40px;
+    background: white;
+    border-radius: 12px;
+}
+
+.back-link {
+    display: inline-block;
+    margin-top: 30px;
+    color: #4a4a5a;
+    text-decoration: none;
+}
+
+.back-link:hover {
+    text-decoration: underline;
+}
+{% endblock %}
+
+{% block content %}
+<div class="join-page">
+    <h1 class="blackletter">Join Game</h1>
+    <p>Select your character to view your sheet</p>
+
+    <div class="character-list">
+        {% if characters %}
+            {% for char in characters %}
+            <div class="character-option">
+                <span class="character-name">{{ char.name }}</span>
+                <a href="/player/{{ char.token }}" class="btn">Play</a>
+            </div>
+            {% endfor %}
+        {% else %}
+            <div class="no-characters">
+                <p>No characters yet. Ask your GM to create one for you.</p>
+            </div>
+        {% endif %}
+    </div>
+
+    <a href="/" class="back-link">&larr; Back to Home</a>
+</div>
+{% endblock %}

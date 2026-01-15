@@ -1,6 +1,20 @@
 # Mausritter Character Generator
 
-A Python program that generates characters for the Mausritter tabletop RPG and creates interactive HTML character sheets.
+A Python program that generates characters for the Mausritter tabletop RPG and creates interactive HTML character sheets. Includes a GM server for managing multiplayer sessions over a local network.
+
+## Quick Start
+
+### Standalone Mode (Single Character)
+```bash
+python3 main.py
+```
+Generates a character and opens the sheet in your browser.
+
+### GM Server Mode (Multiplayer)
+```bash
+python3 run_server.py
+```
+Starts a local web server for GM and player access. See [GM Server](#gm-server) section below.
 
 ## Features
 
@@ -37,6 +51,8 @@ A Python program that generates characters for the Mausritter tabletop RPG and c
 
 ## Usage
 
+### Standalone Mode
+
 Run the program:
 
 ```bash
@@ -48,6 +64,94 @@ The program will:
 2. Display the character details in the terminal
 3. Create an HTML character sheet file
 4. Automatically open the character sheet in your browser
+
+---
+
+## GM Server
+
+The GM Server enables multiplayer sessions where:
+- The GM manages all characters from a dashboard
+- Players connect via browser over the local network (LAN)
+- Character changes sync automatically to the server
+- Sessions can be saved and loaded as JSON files
+
+### Starting the Server
+
+```bash
+python3 run_server.py
+```
+
+On startup, the server displays:
+
+```
+============================================================
+          MAUSRITTER GM SERVER
+============================================================
+
+  GM Dashboard:  http://192.168.x.x:5001/gm?token=abc123
+
+  Player Join:   http://192.168.x.x:5001/join
+
+------------------------------------------------------------
+  Share the Player Join URL with your players.
+  Keep the GM Dashboard URL secret!
+------------------------------------------------------------
+```
+
+**Important URLs:**
+- **GM Dashboard URL**: Contains a secret token - only share with the GM
+- **Player Join URL**: Share this with your players (no token required)
+
+The server runs on port 5001 and listens on all network interfaces, so players on the same LAN can connect using the displayed IP address.
+
+### GM Dashboard Features
+
+- **Create Characters**: Click "+ New Character" to generate characters
+- **View All Characters**: See stats, conditions, and player tokens at a glance
+- **Full Sheet View**: Click "Full Sheet" to open the complete interactive character sheet
+- **Edit Any Character**: Modify stats, add/remove conditions
+- **Session Management**:
+  - **Save Session**: Download the current session as a JSON file
+  - **Load Session**: Upload a previously saved session
+  - **New Session**: Clear all characters and start fresh
+  - **Stop Server**: Safely shut down the server
+
+### Player Experience
+
+1. Players navigate to the **Player Join URL** (e.g., `http://192.168.x.x:5001/join`)
+2. They select their character from the list
+3. They see the full interactive character sheet
+4. Changes auto-save to the server
+
+### Session Persistence
+
+Sessions are stored in memory while the server runs. To preserve your session:
+
+1. Click **Save Session** on the GM Dashboard
+2. A JSON file downloads (e.g., `mausritter_session_name.json`)
+3. To restore later, start the server and click **Load Session**
+
+### Network Requirements
+
+- GM and players must be on the same local network (LAN)
+- No internet connection required
+- No accounts or authentication beyond the GM token
+
+### Server Files
+
+```
+mausritter/
+└── server/
+    ├── app.py              # Flask application
+    ├── session.py          # Session state management
+    ├── routes/
+    │   ├── api.py          # REST API endpoints
+    │   ├── gm.py           # GM dashboard routes
+    │   └── player.py       # Player view routes
+    └── templates/          # HTML templates
+```
+
+---
 
 ## Character Generation Rules (SRD 2.3)
 
@@ -76,21 +180,34 @@ The program will:
 ## Requirements
 
 - Python 3.6 or higher
-- No external dependencies (uses only Python standard library)
+- **Standalone mode**: No external dependencies (uses only Python standard library)
+- **GM Server mode**: Requires Flask (`pip install flask`)
 
 ## Project Structure
 
 ```
 mausritter/
-├── __init__.py
-├── browser.py          # Browser opening utilities
-├── data.py             # All game data (backgrounds, items, etc.)
-├── generator.py        # Character generation logic
-└── templates/
-    ├── __init__.py
-    ├── css.py          # Character sheet styles
-    ├── html_template.py # HTML structure
-    └── js.py           # Interactive functionality
+├── main.py                 # Standalone mode entry point
+├── run_server.py           # GM Server entry point
+├── mausritter/
+│   ├── __init__.py
+│   ├── browser.py          # Browser opening utilities
+│   ├── data.py             # All game data (backgrounds, items, etc.)
+│   ├── generator.py        # Character generation logic
+│   ├── templates/
+│   │   ├── __init__.py
+│   │   ├── css.py          # Character sheet styles
+│   │   ├── html_template.py # HTML structure
+│   │   └── js.py           # Interactive functionality
+│   └── server/
+│       ├── __init__.py
+│       ├── app.py          # Flask application factory
+│       ├── session.py      # In-memory session management
+│       ├── routes/
+│       │   ├── api.py      # REST API endpoints
+│       │   ├── gm.py       # GM dashboard routes
+│       │   └── player.py   # Player view routes
+│       └── templates/      # Server HTML templates
 ```
 
 ## License

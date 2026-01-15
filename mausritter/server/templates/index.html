@@ -1,0 +1,80 @@
+{% extends "base.html" %}
+
+{% block title %}Mausritter - Welcome{% endblock %}
+
+{% block extra_styles %}
+.welcome {
+    text-align: center;
+    padding: 60px 20px;
+}
+
+.welcome h1 {
+    font-size: 3em;
+    margin-bottom: 10px;
+}
+
+.welcome .subtitle {
+    font-size: 1.2em;
+    color: #6a6a7a;
+    margin-bottom: 40px;
+}
+
+.options {
+    display: flex;
+    justify-content: center;
+    gap: 30px;
+    flex-wrap: wrap;
+}
+
+.option-card {
+    background: white;
+    padding: 40px;
+    border-radius: 12px;
+    box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+    text-align: center;
+    min-width: 250px;
+    transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.option-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 4px 16px rgba(0,0,0,0.15);
+}
+
+.option-card h2 {
+    margin-bottom: 15px;
+}
+
+.option-card p {
+    color: #6a6a7a;
+    margin-bottom: 20px;
+}
+
+.mouse-icon {
+    font-size: 4em;
+    margin-bottom: 20px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="welcome">
+    <h1 class="blackletter">Mausritter</h1>
+    <p class="subtitle">Character Management System</p>
+
+    <div class="options">
+        <div class="option-card">
+            <div class="mouse-icon">&#x1F400;</div>
+            <h2>Game Master</h2>
+            <p>Create and manage characters, run sessions</p>
+            <a href="/gm?token={{ gm_token }}" class="btn" id="gm-link">Enter GM Dashboard</a>
+        </div>
+
+        <div class="option-card">
+            <div class="mouse-icon">&#x1F401;</div>
+            <h2>Player</h2>
+            <p>Join a session and manage your character</p>
+            <a href="/join" class="btn btn-secondary">Join Game</a>
+        </div>
+    </div>
+</div>
+{% endblock %}

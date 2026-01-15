@@ -1,0 +1,429 @@
+{% extends "player.html" %}
+
+{% block title %}{{ character.name }} (GM View) - Mausritter{% endblock %}
+
+{% block extra_styles %}
+{{ super() }}
+
+.gm-header {
+    background: #4a4a5a;
+    color: white;
+    padding: 10px 20px;
+    margin: -25px -25px 25px -25px;
+    border-radius: 12px 12px 0 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.gm-header h2 {
+    color: white;
+    margin: 0;
+}
+
+.gm-actions {
+    display: flex;
+    gap: 10px;
+}
+
+.gm-actions .btn {
+    background: rgba(255,255,255,0.2);
+}
+
+.gm-actions .btn:hover {
+    background: rgba(255,255,255,0.3);
+}
+
+.conditions-box {
+    border: 2px solid #4a4a5a;
+    border-radius: 8px;
+    padding: 15px;
+}
+
+.condition-tag {
+    cursor: pointer;
+}
+
+.condition-tag:hover {
+    background: #ffdddd;
+}
+
+.add-condition-btn {
+    background: #f0f0f0;
+    color: #666;
+    padding: 6px 12px;
+    border-radius: 6px;
+    font-size: 0.9em;
+    cursor: pointer;
+    border: 1px dashed #ccc;
+}
+
+.add-condition-btn:hover {
+    background: #e0e0e0;
+}
+
+.modal-overlay {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0,0,0,0.5);
+    z-index: 1000;
+    justify-content: center;
+    align-items: center;
+}
+
+.modal-overlay.active {
+    display: flex;
+}
+
+.modal {
+    background: white;
+    padding: 30px;
+    border-radius: 12px;
+    max-width: 400px;
+    width: 90%;
+}
+
+.modal h3 {
+    margin-bottom: 20px;
+}
+
+.modal-actions {
+    display: flex;
+    gap: 10px;
+    justify-content: flex-end;
+    margin-top: 20px;
+}
+{% endblock %}
+
+{% block content %}
+<div class="character-sheet">
+    <div class="gm-header">
+        <h2>GM View: {{ character.name }}</h2>
+        <div class="gm-actions">
+            <a href="/gm?token={{ token }}" class="btn">&larr; Back to Dashboard</a>
+        </div>
+    </div>
+
+    <div class="sheet-header">
+        <div class="name-box">
+            <div class="name-row">
+                <span class="field-label blackletter">Name</span>
+                <input type="text" class="field-input" id="name" value="{{ character.name }}" data-field="name">
+            </div>
+            <div class="name-row" style="border-bottom: none; margin-bottom: 0; padding-bottom: 0;">
+                <span class="field-label">Background</span>
+                <input type="text" class="field-input" id="background" value="{{ character.background }}" data-field="background">
+            </div>
+        </div>
+        <div class="appearance-box">
+            <div class="appearance-grid">
+                <span class="field-label">Birthsign</span>
+                <input type="text" class="field-input" value="{{ character.appearance.birthsign }}" data-field="appearance.birthsign">
+                <span class="field-label">Coat</span>
+                <input type="text" class="field-input" value="{{ character.appearance.coat }}" data-field="appearance.coat">
+                <span class="field-label">Look</span>
+                <input type="text" class="field-input" value="{{ character.appearance.look }}" data-field="appearance.look">
+            </div>
+        </div>
+    </div>
+
+    <div class="stats-section">
+        <div class="stat-card">
+            <div class="stat-name">STR</div>
+            <div class="stat-values">
+                <input type="number" class="stat-current-input" value="{{ character.attributes.STR.current }}"
+                       data-field="attributes.STR.current" data-max="{{ character.attributes.STR.max }}" min="0" max="{{ character.attributes.STR.max }}">
+                <span class="stat-max">/ {{ character.attributes.STR.max }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-name">DEX</div>
+            <div class="stat-values">
+                <input type="number" class="stat-current-input" value="{{ character.attributes.DEX.current }}"
+                       data-field="attributes.DEX.current" data-max="{{ character.attributes.DEX.max }}" min="0" max="{{ character.attributes.DEX.max }}">
+                <span class="stat-max">/ {{ character.attributes.DEX.max }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-name">WIL</div>
+            <div class="stat-values">
+                <input type="number" class="stat-current-input" value="{{ character.attributes.WIL.current }}"
+                       data-field="attributes.WIL.current" data-max="{{ character.attributes.WIL.max }}" min="0" max="{{ character.attributes.WIL.max }}">
+                <span class="stat-max">/ {{ character.attributes.WIL.max }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-name">HP</div>
+            <div class="stat-values">
+                <input type="number" class="stat-current-input" value="{{ character.hp.current }}"
+                       data-field="hp.current" data-max="{{ character.hp.max }}" min="0" max="{{ character.hp.max }}">
+                <span class="stat-max">/ {{ character.hp.max }}</span>
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-name">Pips</div>
+            <div class="stat-values">
+                <input type="number" class="stat-current-input" value="{{ character.pips }}"
+                       data-field="pips" min="0" max="250">
+            </div>
+        </div>
+        <div class="stat-card">
+            <div class="stat-name">Grit</div>
+            <div class="stat-values">
+                <input type="number" class="stat-current-input" value="{{ character.grit }}"
+                       data-field="grit" min="0" max="10">
+            </div>
+        </div>
+    </div>
+
+    <div class="inventory-section">
+        <h2>Inventory</h2>
+        <div class="inventory-grid">
+            <div class="slot-group">
+                <h3>Paws</h3>
+                <div class="slot">
+                    <input type="text" class="slot-input" placeholder="Main paw"
+                           value="{{ character.inventory.main_paw }}" data-field="inventory.main_paw">
+                </div>
+                <div class="slot">
+                    <input type="text" class="slot-input" placeholder="Off paw"
+                           value="{{ character.inventory.off_paw }}" data-field="inventory.off_paw">
+                </div>
+            </div>
+            <div class="slot-group">
+                <h3>Body</h3>
+                {% for i in range(2) %}
+                <div class="slot">
+                    <input type="text" class="slot-input" placeholder="Body slot {{ i + 1 }}"
+                           value="{{ character.inventory.body[i] }}" data-field="inventory.body.{{ i }}">
+                </div>
+                {% endfor %}
+            </div>
+            <div class="slot-group">
+                <h3>Pack</h3>
+                {% for i in range(6) %}
+                <div class="slot">
+                    <input type="text" class="slot-input" placeholder="Pack slot {{ i + 1 }}"
+                           value="{{ character.inventory.pack[i] }}" data-field="inventory.pack.{{ i }}">
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+
+    <div class="bottom-section">
+        <div class="info-box">
+            <h3>Progress</h3>
+            <div class="info-row">
+                <span class="info-label">Level</span>
+                <input type="number" class="info-input" value="{{ character.level }}" data-field="level" min="1">
+            </div>
+            <div class="info-row">
+                <span class="info-label">XP</span>
+                <input type="number" class="info-input" value="{{ character.xp }}" data-field="xp" min="0">
+            </div>
+        </div>
+        <div class="info-box">
+            <h3>Banked</h3>
+            <div class="info-row">
+                <span class="info-label">Pips</span>
+                <input type="number" class="info-input" value="{{ character.banked.pips }}" data-field="banked.pips" min="0">
+            </div>
+        </div>
+    </div>
+
+    <div class="conditions-box">
+        <h3>Conditions (click to remove)</h3>
+        <div class="conditions-list" id="conditions-list">
+            {% for condition in character.conditions %}
+            <span class="condition-tag" onclick="removeCondition('{{ condition }}')">{{ condition }}</span>
+            {% endfor %}
+            <button class="add-condition-btn" onclick="showConditionModal()">+ Add Condition</button>
+        </div>
+    </div>
+
+    <div class="notes-section">
+        <h3>Notes</h3>
+        <textarea class="notes-textarea" data-field="notes" placeholder="Character notes...">{{ character.notes }}</textarea>
+    </div>
+
+    <div class="dice-section">
+        <h3>Dice Roller</h3>
+        <div class="dice-input-row">
+            <input type="text" class="dice-input" id="dice-input" placeholder="e.g., 2d6+3, 1d20">
+            <button class="btn" onclick="rollDice()">Roll</button>
+        </div>
+        <div class="dice-result" id="dice-result">-</div>
+    </div>
+</div>
+
+<div class="save-indicator" id="save-indicator">Saved!</div>
+
+<!-- Condition Modal -->
+<div class="modal-overlay" id="condition-modal">
+    <div class="modal">
+        <h3>Add Condition</h3>
+        <div class="grid-2" style="gap: 10px;">
+            <button class="btn" onclick="addCondition('Exhausted')">Exhausted</button>
+            <button class="btn" onclick="addCondition('Frightened')">Frightened</button>
+            <button class="btn" onclick="addCondition('Hungry')">Hungry</button>
+            <button class="btn" onclick="addCondition('Injured')">Injured</button>
+            <button class="btn" onclick="addCondition('Poisoned')">Poisoned</button>
+            <button class="btn" onclick="addCondition('Stunned')">Stunned</button>
+        </div>
+        <div class="modal-actions">
+            <button class="btn btn-secondary" onclick="hideConditionModal()">Cancel</button>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_scripts %}
+const characterId = '{{ character.id }}';
+let currentConditions = {{ character.conditions | tojson }};
+let saveTimeout = null;
+
+// Auto-save on field change
+document.querySelectorAll('[data-field]').forEach(input => {
+    input.addEventListener('change', () => saveField(input));
+    input.addEventListener('blur', () => saveField(input));
+});
+
+async function saveField(input) {
+    const field = input.dataset.field;
+    let value = input.type === 'number' ? parseInt(input.value) || 0 : input.value;
+
+    // Enforce max value constraint for stats
+    if (input.dataset.max) {
+        const maxValue = parseInt(input.dataset.max);
+        if (value > maxValue) {
+            value = maxValue;
+            input.value = maxValue;
+        }
+    }
+
+    const parts = field.split('.');
+    let data = {};
+    let current = data;
+
+    for (let i = 0; i < parts.length - 1; i++) {
+        const part = parts[i];
+        const nextPart = parts[i + 1];
+        if (!isNaN(parseInt(nextPart))) {
+            current[part] = current[part] || [];
+        } else {
+            current[part] = current[part] || {};
+        }
+        current = current[part];
+    }
+
+    const lastPart = parts[parts.length - 1];
+    if (!isNaN(parseInt(lastPart))) {
+        const arrayField = parts.slice(0, -1).join('.');
+        const arrayInputs = document.querySelectorAll(`[data-field^="${arrayField}."]`);
+        const arrayValues = [];
+        arrayInputs.forEach(inp => {
+            const idx = parseInt(inp.dataset.field.split('.').pop());
+            arrayValues[idx] = inp.value;
+        });
+        data = {};
+        current = data;
+        for (let i = 0; i < parts.length - 2; i++) {
+            current[parts[i]] = {};
+            current = current[parts[i]];
+        }
+        current[parts[parts.length - 2]] = arrayValues;
+    } else {
+        current[lastPart] = value;
+    }
+
+    const result = await apiPatch(`/characters/${characterId}`, data);
+    if (result.success) {
+        showSaveIndicator();
+    }
+}
+
+function showSaveIndicator() {
+    const indicator = document.getElementById('save-indicator');
+    indicator.classList.add('show');
+    clearTimeout(saveTimeout);
+    saveTimeout = setTimeout(() => indicator.classList.remove('show'), 1500);
+}
+
+function showConditionModal() {
+    document.getElementById('condition-modal').classList.add('active');
+}
+
+function hideConditionModal() {
+    document.getElementById('condition-modal').classList.remove('active');
+}
+
+async function addCondition(condition) {
+    if (currentConditions.includes(condition)) {
+        hideConditionModal();
+        return;
+    }
+    currentConditions.push(condition);
+    await updateConditions();
+    hideConditionModal();
+}
+
+async function removeCondition(condition) {
+    currentConditions = currentConditions.filter(c => c !== condition);
+    await updateConditions();
+}
+
+async function updateConditions() {
+    const result = await apiPatch(`/characters/${characterId}`, { conditions: currentConditions });
+    if (result.success) {
+        location.reload();
+    }
+}
+
+// Dice roller
+function rollDice() {
+    const input = document.getElementById('dice-input').value.trim();
+    const result = document.getElementById('dice-result');
+    if (!input) { result.textContent = '-'; return; }
+    try {
+        result.textContent = parseDiceNotation(input);
+    } catch (e) {
+        result.textContent = 'Invalid';
+    }
+}
+
+function parseDiceNotation(notation) {
+    const pattern = /(\d+)d(\d+)([+-]\d+)?/gi;
+    let total = 0;
+    let match;
+    let matched = false;
+    while ((match = pattern.exec(notation)) !== null) {
+        matched = true;
+        const numDice = parseInt(match[1]);
+        const sides = parseInt(match[2]);
+        const modifier = match[3] ? parseInt(match[3]) : 0;
+        for (let i = 0; i < numDice; i++) {
+            total += Math.floor(Math.random() * sides) + 1;
+        }
+        total += modifier;
+    }
+    if (!matched) {
+        const num = parseInt(notation);
+        if (!isNaN(num)) return num;
+        throw new Error('Invalid');
+    }
+    return total;
+}
+
+document.getElementById('dice-input').addEventListener('keypress', e => {
+    if (e.key === 'Enter') rollDice();
+});
+
+document.getElementById('condition-modal').addEventListener('click', e => {
+    if (e.target.id === 'condition-modal') hideConditionModal();
+});
+{% endblock %}
