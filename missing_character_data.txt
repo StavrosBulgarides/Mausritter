@@ -14,12 +14,6 @@ RULES DIFFERENCES
    - Generator: Does not offer this option
    - This is a player choice that could be offered via the HTML interface
 
-MISSING WEAPON DATA
--------------------
-1. Improvised Weapons (not in selection)
-   - d6 damage, wielded in main paw or both paws
-   - Special: Always mark usage after a fight
-
 SPELL MECHANICS (NOT IMPLEMENTED)
 ---------------------------------
 Spells are available in item selector, but spell casting mechanics are not:

@@ -9,14 +9,18 @@
 etc. 
 
 ## Dice roller
-1) Weapon attack similar
+1) Clear result
+2) Weapon attack similar
+
+## Player area
+1) Notes
+2) Maps  - draw
 
 ## Hit protection and damage
 1) Attacks
 **Attacks always hit.** Roll your weapon’s die and do that much damage to an opponent, minus their armour.
 
 When an attack is **impaired**, such is firing into cover, or fighting while grappled, roll **d4** for damage regardless of weapon. When an attack is **enhanced** by a gambit or vulnerable opponent, roll **d12**.
-
 
 ## Spells
 1) Some backgrounds provide spells, but spell mechanics are not included:
@@ -33,6 +37,9 @@ When an attack is **impaired**, such is firing into cover, or fighting while gra
 2) GM turn tracker
 3) GM Condition tracking - flag all conditions applied
 4) GM only notes
+5) GM sharing area - share content with players. One/all. Maps, letters etc.
+5) Set advantages/disadvantages for a player
+6) Run fights
 
 ### High-level approach
 Create a small local web server: Python backend (Flask)
