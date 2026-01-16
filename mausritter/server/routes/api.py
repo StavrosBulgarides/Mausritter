@@ -94,6 +94,21 @@ def update_session_name():
     return jsonify({"success": True})
 
 
+@api_bp.route("/session/data", methods=["PATCH"])
+def update_session_data():
+    """Update session data like turn count (GM only)."""
+    token = request.args.get("token", "")
+    if not game_session.verify_gm(token):
+        return jsonify({"error": "Unauthorized"}), 401
+
+    data = request.get_json()
+    if not data:
+        return jsonify({"error": "No data provided"}), 400
+
+    game_session.update_session_data(data)
+    return jsonify({"success": True})
+
+
 @api_bp.route("/server/shutdown", methods=["POST"])
 def shutdown_server():
     """Shutdown the server (GM only)."""

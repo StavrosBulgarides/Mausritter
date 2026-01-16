@@ -25,6 +25,7 @@ def dashboard():
         characters=characters,
         session_name=session_state.get("session_name", "New Session"),
         gm_notes=session_state.get("gm_notes", ""),
+        session_data=game_session.get_session_data(),
     )
 
 

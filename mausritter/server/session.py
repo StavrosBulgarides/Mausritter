@@ -22,6 +22,9 @@ class GameSession:
             "created": datetime.now().isoformat(),
             "characters": {},
             "gm_notes": "",
+            "session_data": {
+                "turn_count": 1
+            },
             "combat": {
                 "active": False,
                 "turn_order": [],
@@ -51,6 +54,18 @@ class GameSession:
     def set_gm_notes(self, notes: str) -> None:
         """Set GM notes."""
         self._state["gm_notes"] = notes
+
+    def get_session_data(self) -> Dict[str, Any]:
+        """Get session data (turn count, etc)."""
+        if "session_data" not in self._state:
+            self._state["session_data"] = {"turn_count": 1}
+        return self._state["session_data"]
+
+    def update_session_data(self, data: Dict[str, Any]) -> None:
+        """Update session data."""
+        if "session_data" not in self._state:
+            self._state["session_data"] = {"turn_count": 1}
+        self._state["session_data"].update(data)
 
     # Character management
 
