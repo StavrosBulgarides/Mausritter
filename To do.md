@@ -8,6 +8,13 @@
 2) Rest to recover HP if lost
 etc. 
 
+# Advantage/disadvantage
+1) Advantages/disadvantages should be indicated against the relevant stats.
+2) Selecting Advantage/disadvantage on a non-stat driven dice roll shouldn't automatically roll the dice
+
+## Conditions
+1) Conditions assigned by GM need a new 'Conditions to assign' concept which allows users to move to Grit or inventory. At the moment the sheet uplift the Grit in line with the condition. Need to allow 'soft' warning - perhaps deeper red?
+
 ## Dice roller
 1) Clear result
 2) Weapon attack similar
@@ -47,9 +54,9 @@ When an attack is **impaired**, such is firing into cover, or fighting while gra
 - [x] Stop server button
 - [x] GM condition tracking - add/remove conditions from dashboard
 - [x] Player tokens for character access
+- [x] Full data persistence on GM -> Player -> GM cycle (conditions, inventory usage, hirelings, slot states)
 
 ### To Do
--) Some data is not preserved on a cycle from GM -> Player (update) -> GM. This needs to be resolved to ensure data preservation for all data types.
 1) GM turn tracker / initiative order
 2) GM only notes (per character and session-wide)
 3) GM sharing area - share content with players (maps, letters, etc.)

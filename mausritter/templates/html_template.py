@@ -1,5 +1,6 @@
 """HTML template generation for Mausritter character sheets."""
 
+import json
 from pathlib import Path
 from typing import Dict, Any, List
 
@@ -552,11 +553,23 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
 
     # Add server connectivity script if in server mode
     if server_mode and token:
+        # Prepare character data for restoration (hirelings, conditions, usage markers)
+        hirelings_json = json.dumps(character.get("hirelings", []))
+        conditions_json = json.dumps(character.get("conditions", []))
+        inventory_usage_json = json.dumps(character.get("inventory_usage", {}))
+        max_grit = character.get("max_grit", character.get("grit", 0))
+
         server_script = f"""
     <script>
         // Server connectivity - auto-save changes
         const API_TOKEN = '{token}';
         const CHARACTER_ID = '{character.get("id", "")}';
+
+        // Stored character data for restoration on page load
+        const STORED_HIRELINGS = {hirelings_json};
+        const STORED_CONDITIONS = {conditions_json};
+        const STORED_INVENTORY_USAGE = {inventory_usage_json};
+        const STORED_MAX_GRIT = {max_grit};
 
         function debounce(func, wait) {{
             let timeout;
@@ -631,53 +644,88 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
             const hirelingCards = document.querySelectorAll('.hireling-card');
 
             hirelingCards.forEach(card => {{
+                // Get type from title text
+                const typeText = card.querySelector('.hireling-title-text')?.textContent || 'Hireling';
+
+                // Get look and disposition from the info row fields
+                const fields = card.querySelectorAll('.hireling-field');
+                let look = '';
+                let disposition = '';
+                fields.forEach(field => {{
+                    const label = field.querySelector('.hireling-field-label')?.textContent?.trim();
+                    const input = field.querySelector('input');
+                    if (label === 'Look' && input) look = input.value || '';
+                    if (label === 'Disposition' && input) disposition = input.value || '';
+                }});
+
                 const hireling = {{
-                    name: card.querySelector('.hireling-name-input')?.value || '',
-                    type: card.querySelector('.hireling-type-display')?.textContent || '',
-                    look: card.querySelector('.hireling-look-input')?.value || '',
-                    disposition: card.querySelector('.hireling-disposition-input')?.value || '',
+                    type: typeText,
+                    look: look,
+                    disposition: disposition,
                     attributes: {{}},
-                    hp: {{}},
+                    hp: {{ max: 1, current: 1 }},
                     inventory: {{
                         paws: ['', ''],
                         pack: ['', '', '', '']
+                    }},
+                    usage: {{
+                        paws: [[false, false, false], [false, false, false]],
+                        pack: [[false, false, false], [false, false, false], [false, false, false], [false, false, false]]
                     }}
                 }};
 
-                // Get hireling stats
-                const statRows = card.querySelectorAll('.hireling-attribute-row');
+                // Get hireling stats from .hireling-stat-row elements
+                const statRows = card.querySelectorAll('.hireling-stat-row');
                 statRows.forEach(row => {{
-                    const label = row.querySelector('.hireling-attribute-label')?.textContent?.trim();
+                    const label = row.querySelector('.hireling-stat-label')?.textContent?.trim();
                     const inputs = row.querySelectorAll('input[type="number"]');
                     if (label && inputs.length >= 2) {{
-                        hireling.attributes[label] = {{
-                            max: parseInt(inputs[0].value) || 0,
-                            current: parseInt(inputs[1].value) || 0
-                        }};
+                        if (label === 'HP') {{
+                            hireling.hp = {{
+                                max: parseInt(inputs[0].value) || 1,
+                                current: parseInt(inputs[1].value) || 1
+                            }};
+                        }} else {{
+                            hireling.attributes[label] = {{
+                                max: parseInt(inputs[0].value) || 0,
+                                current: parseInt(inputs[1].value) || 0
+                            }};
+                        }}
                     }}
                 }});
 
-                // Get hireling HP
-                const hpRow = card.querySelector('.hireling-hp-row');
-                if (hpRow) {{
-                    const inputs = hpRow.querySelectorAll('input[type="number"]');
-                    if (inputs.length >= 2) {{
-                        hireling.hp = {{
-                            max: parseInt(inputs[0].value) || 0,
-                            current: parseInt(inputs[1].value) || 0
-                        }};
+                // Get hireling inventory - paw slots
+                const pawSlots = card.querySelectorAll('.hireling-inventory-slot[data-slot-type="paw"]');
+                pawSlots.forEach((slot, i) => {{
+                    if (i < 2) {{
+                        const textarea = slot.querySelector('.hireling-slot-content textarea');
+                        hireling.inventory.paws[i] = textarea?.value || '';
+                        // Get usage markers
+                        const markers = slot.querySelectorAll('.usage-marker');
+                        markers.forEach((marker, mi) => {{
+                            if (mi < 3) {{
+                                hireling.usage.paws[i][mi] = marker.classList.contains('used') ? 'used' :
+                                                            (marker.classList.contains('half-used') ? 'half' : false);
+                            }}
+                        }});
                     }}
-                }}
-
-                // Get hireling inventory
-                const pawSlots = card.querySelectorAll('.hireling-paw-slot .slot-content textarea');
-                pawSlots.forEach((textarea, i) => {{
-                    if (i < 2) hireling.inventory.paws[i] = textarea.value || '';
                 }});
 
-                const packSlots = card.querySelectorAll('.hireling-pack-slot .slot-content textarea');
-                packSlots.forEach((textarea, i) => {{
-                    if (i < 4) hireling.inventory.pack[i] = textarea.value || '';
+                // Get hireling inventory - pack slots
+                const packSlots = card.querySelectorAll('.hireling-inventory-slot[data-slot-type="pack"]');
+                packSlots.forEach((slot, i) => {{
+                    if (i < 4) {{
+                        const textarea = slot.querySelector('.hireling-slot-content textarea');
+                        hireling.inventory.pack[i] = textarea?.value || '';
+                        // Get usage markers
+                        const markers = slot.querySelectorAll('.usage-marker');
+                        markers.forEach((marker, mi) => {{
+                            if (mi < 3) {{
+                                hireling.usage.pack[i][mi] = marker.classList.contains('used') ? 'used' :
+                                                            (marker.classList.contains('half-used') ? 'half' : false);
+                            }}
+                        }});
+                    }}
                 }});
 
                 hirelings.push(hireling);
@@ -686,8 +734,80 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
             return hirelings;
         }}
 
+        function getConditions() {{
+            const conditions = [];
+            document.querySelectorAll('.ignored-condition-row').forEach(row => {{
+                const conditionName = row.dataset.condition || row.querySelector('.ignored-condition-name')?.textContent;
+                if (conditionName) {{
+                    conditions.push(conditionName);
+                }}
+            }});
+            return conditions;
+        }}
+
+        function getSlotState(slot) {{
+            // Capture all relevant state from a slot
+            const markers = slot.querySelectorAll('.usage-marker');
+            const markerStates = [];
+            markers.forEach((marker, mi) => {{
+                if (mi < 3) {{
+                    markerStates.push(marker.classList.contains('used') ? 'used' :
+                                     (marker.classList.contains('half-used') ? 'half' : false));
+                }}
+            }});
+
+            return {{
+                markers: markerStates,
+                twoSlotItem: slot.classList.contains('two-slot-item'),
+                twoSlotSecondary: slot.classList.contains('two-slot-secondary'),
+                conditionSlot: slot.classList.contains('condition-slot'),
+                depleted: slot.classList.contains('depleted'),
+                lightArmourSlot: slot.classList.contains('light-armour-slot')
+            }};
+        }}
+
+        function getInventoryUsage() {{
+            const usage = {{
+                main_paw: {{ markers: [false, false, false] }},
+                off_paw: {{ markers: [false, false, false] }},
+                body: [{{ markers: [false, false, false] }}, {{ markers: [false, false, false] }}],
+                pack: [{{ markers: [false, false, false] }}, {{ markers: [false, false, false] }},
+                       {{ markers: [false, false, false] }}, {{ markers: [false, false, false] }},
+                       {{ markers: [false, false, false] }}, {{ markers: [false, false, false] }}]
+            }};
+
+            // Paw slots
+            const pawSlots = document.querySelectorAll('.paw-slot');
+            pawSlots.forEach((slot, slotIdx) => {{
+                const key = slotIdx === 0 ? 'main_paw' : 'off_paw';
+                usage[key] = getSlotState(slot);
+            }});
+
+            // Body slots
+            const bodySlots = document.querySelectorAll('.body-slot');
+            bodySlots.forEach((slot, slotIdx) => {{
+                if (slotIdx < 2) {{
+                    usage.body[slotIdx] = getSlotState(slot);
+                }}
+            }});
+
+            // Pack slots
+            const packSlots = document.querySelectorAll('.pack-slot');
+            packSlots.forEach((slot, slotIdx) => {{
+                if (slotIdx < 6) {{
+                    usage.pack[slotIdx] = getSlotState(slot);
+                }}
+            }});
+
+            return usage;
+        }}
+
         async function saveToServer() {{
             if (!CHARACTER_ID) return;
+
+            // Get max grit from data attribute
+            const gritInput = document.querySelector('.grit-input');
+            const maxGrit = parseInt(gritInput?.dataset?.maxGrit) || 0;
 
             // Collect current character state from DOM
             const data = {{
@@ -700,10 +820,13 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
                 }},
                 hp: getHpValues(),
                 pips: parseInt(document.querySelector('.pips-input')?.value) || 0,
-                grit: parseInt(document.querySelector('.grit-input')?.value) || 0,
+                grit: parseInt(gritInput?.value) || 0,
+                max_grit: maxGrit,
                 level: parseInt(document.querySelector('.level-row input')?.value) || 1,
                 xp: parseInt(document.querySelector('.xp-row input')?.value) || 0,
                 inventory: getInventory(),
+                inventory_usage: getInventoryUsage(),
+                conditions: getConditions(),
                 hirelings: getHirelings()
             }};
 
@@ -750,6 +873,227 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
 
         const debouncedSave = debounce(saveToServer, 1000);
 
+        // Restoration functions for loading saved state
+        function restoreSlotState(slot, slotState) {{
+            if (!slotState) return;
+
+            // Handle both old format (array) and new format (object with markers)
+            const markerStates = slotState.markers || slotState;
+            if (Array.isArray(markerStates)) {{
+                const markers = slot.querySelectorAll('.usage-marker');
+                markers.forEach((marker, mi) => {{
+                    if (markerStates[mi] === 'used') {{
+                        marker.classList.add('used');
+                    }} else if (markerStates[mi] === 'half') {{
+                        marker.classList.add('half-used');
+                    }}
+                }});
+            }}
+
+            // Restore slot classes
+            if (slotState.twoSlotItem) slot.classList.add('two-slot-item');
+            if (slotState.twoSlotSecondary) {{
+                slot.classList.add('two-slot-secondary');
+                // Make textarea readonly for secondary slot
+                const textarea = slot.querySelector('.slot-content textarea');
+                if (textarea) textarea.readOnly = true;
+            }}
+            if (slotState.depleted) slot.classList.add('depleted');
+            if (slotState.lightArmourSlot) slot.classList.add('light-armour-slot');
+
+            // Restore condition styling
+            if (slotState.conditionSlot) {{
+                slot.classList.add('condition-slot');
+                // Get the item name from the textarea to find the clear text
+                const textarea = slot.querySelector('.slot-content textarea');
+                if (textarea) {{
+                    const itemName = textarea.value.split('\\n')[0].trim();
+                    if (CONDITION_CLEAR[itemName]) {{
+                        const clearDiv = document.createElement('div');
+                        clearDiv.className = 'condition-clear';
+                        clearDiv.textContent = CONDITION_CLEAR[itemName];
+                        slot.querySelector('.slot-content').appendChild(clearDiv);
+                    }}
+                }}
+            }}
+        }}
+
+        function restoreInventoryUsage(usage) {{
+            if (!usage) return;
+
+            // Restore paw slots
+            const pawSlots = document.querySelectorAll('.paw-slot');
+            pawSlots.forEach((slot, slotIdx) => {{
+                const key = slotIdx === 0 ? 'main_paw' : 'off_paw';
+                restoreSlotState(slot, usage[key]);
+            }});
+
+            // Restore body slots
+            const bodySlots = document.querySelectorAll('.body-slot');
+            bodySlots.forEach((slot, slotIdx) => {{
+                if (usage.body && usage.body[slotIdx]) {{
+                    restoreSlotState(slot, usage.body[slotIdx]);
+                }}
+            }});
+
+            // Restore pack slots
+            const packSlots = document.querySelectorAll('.pack-slot');
+            packSlots.forEach((slot, slotIdx) => {{
+                if (usage.pack && usage.pack[slotIdx]) {{
+                    restoreSlotState(slot, usage.pack[slotIdx]);
+                }}
+            }});
+        }}
+
+        function restoreConditions(conditions, maxGrit) {{
+            if (!conditions || !Array.isArray(conditions)) return;
+
+            const gritInput = document.querySelector('.grit-input');
+            if (gritInput && maxGrit !== undefined) {{
+                gritInput.dataset.maxGrit = maxGrit;
+            }}
+
+            const conditionsList = document.querySelector('.ignored-conditions-list');
+            if (!conditionsList) return;
+
+            conditions.forEach(conditionName => {{
+                const row = document.createElement('div');
+                row.className = 'ignored-condition-row';
+                row.dataset.condition = conditionName;
+
+                const removeBtn = document.createElement('button');
+                removeBtn.className = 'slot-btn clear-btn';
+                removeBtn.textContent = '-';
+                removeBtn.onclick = function() {{
+                    removeIgnoredCondition(this);
+                }};
+
+                const content = document.createElement('div');
+                content.className = 'ignored-condition-content';
+
+                const nameSpan = document.createElement('span');
+                nameSpan.className = 'ignored-condition-name';
+                nameSpan.textContent = conditionName;
+
+                const clearSpan = document.createElement('span');
+                clearSpan.className = 'ignored-condition-clear';
+                clearSpan.textContent = CONDITION_CLEAR[conditionName] || '';
+
+                content.appendChild(nameSpan);
+                content.appendChild(clearSpan);
+
+                row.appendChild(removeBtn);
+                row.appendChild(content);
+
+                conditionsList.appendChild(row);
+            }});
+        }}
+
+        function restoreHirelings(hirelings) {{
+            if (!hirelings || !Array.isArray(hirelings)) return;
+
+            const container = document.getElementById('hirelingsContainer');
+            if (!container) return;
+
+            // Open the hirelings section if there are hirelings
+            if (hirelings.length > 0) {{
+                const content = document.getElementById('hirelingsContent');
+                const toggle = document.getElementById('hirelingsToggle');
+                if (content && !content.classList.contains('active')) {{
+                    content.classList.add('active');
+                    if (toggle) toggle.textContent = '▲';
+                }}
+            }}
+
+            hirelings.forEach(hireling => {{
+                // Use the existing addHirelingWithType but we need to set the values after
+                hirelingCounter++;
+                const stats = {{
+                    hp: hireling.hp?.max || 1,
+                    str: hireling.attributes?.STR?.max || 6,
+                    dex: hireling.attributes?.DEX?.max || 6,
+                    wil: hireling.attributes?.WIL?.max || 6,
+                    look: hireling.look || '',
+                    disposition: hireling.disposition || ''
+                }};
+
+                // Get display number for this type
+                const displayNumber = document.querySelectorAll(`.hireling-card[data-hireling-type="${{hireling.type}}"]`).length + 1;
+                const cardHTML = createHirelingCardHTML(hirelingCounter, stats, displayNumber, hireling.type);
+
+                container.insertAdjacentHTML('beforeend', cardHTML);
+
+                const hirelingCard = document.getElementById('hireling-' + hirelingCounter);
+                if (hirelingCard) {{
+                    setupHirelingStatListeners(hirelingCard);
+
+                    // Set current values (which may differ from max)
+                    const statRows = hirelingCard.querySelectorAll('.hireling-stat-row');
+                    statRows.forEach(row => {{
+                        const label = row.querySelector('.hireling-stat-label')?.textContent?.trim();
+                        const inputs = row.querySelectorAll('input[type="number"]');
+                        if (inputs.length >= 2) {{
+                            if (label === 'HP' && hireling.hp) {{
+                                inputs[1].value = hireling.hp.current || hireling.hp.max || 1;
+                            }} else if (hireling.attributes && hireling.attributes[label]) {{
+                                inputs[1].value = hireling.attributes[label].current || hireling.attributes[label].max || 0;
+                            }}
+                        }}
+                    }});
+
+                    // Restore hireling inventory
+                    if (hireling.inventory) {{
+                        const pawSlots = hirelingCard.querySelectorAll('.hireling-inventory-slot[data-slot-type="paw"]');
+                        pawSlots.forEach((slot, i) => {{
+                            if (hireling.inventory.paws && hireling.inventory.paws[i]) {{
+                                const textarea = slot.querySelector('.hireling-slot-content textarea');
+                                if (textarea) textarea.value = hireling.inventory.paws[i];
+                            }}
+                        }});
+
+                        const packSlots = hirelingCard.querySelectorAll('.hireling-inventory-slot[data-slot-type="pack"]');
+                        packSlots.forEach((slot, i) => {{
+                            if (hireling.inventory.pack && hireling.inventory.pack[i]) {{
+                                const textarea = slot.querySelector('.hireling-slot-content textarea');
+                                if (textarea) textarea.value = hireling.inventory.pack[i];
+                            }}
+                        }});
+                    }}
+
+                    // Restore hireling usage markers
+                    if (hireling.usage) {{
+                        const pawSlots = hirelingCard.querySelectorAll('.hireling-inventory-slot[data-slot-type="paw"]');
+                        pawSlots.forEach((slot, i) => {{
+                            if (hireling.usage.paws && hireling.usage.paws[i]) {{
+                                const markers = slot.querySelectorAll('.usage-marker');
+                                markers.forEach((marker, mi) => {{
+                                    if (hireling.usage.paws[i][mi] === 'used') {{
+                                        marker.classList.add('used');
+                                    }} else if (hireling.usage.paws[i][mi] === 'half') {{
+                                        marker.classList.add('half-used');
+                                    }}
+                                }});
+                            }}
+                        }});
+
+                        const packSlots = hirelingCard.querySelectorAll('.hireling-inventory-slot[data-slot-type="pack"]');
+                        packSlots.forEach((slot, i) => {{
+                            if (hireling.usage.pack && hireling.usage.pack[i]) {{
+                                const markers = slot.querySelectorAll('.usage-marker');
+                                markers.forEach((marker, mi) => {{
+                                    if (hireling.usage.pack[i][mi] === 'used') {{
+                                        marker.classList.add('used');
+                                    }} else if (hireling.usage.pack[i][mi] === 'half') {{
+                                        marker.classList.add('half-used');
+                                    }}
+                                }});
+                            }}
+                        }});
+                    }}
+                }}
+            }});
+        }}
+
         function showSaveIndicator() {{
             let indicator = document.getElementById('server-save-indicator');
             if (!indicator) {{
@@ -765,6 +1109,11 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
 
         // Attach save listeners to all inputs and textareas
         document.addEventListener('DOMContentLoaded', () => {{
+            // Restore saved state first (before attaching listeners to avoid triggering saves)
+            restoreInventoryUsage(STORED_INVENTORY_USAGE);
+            restoreConditions(STORED_CONDITIONS, STORED_MAX_GRIT);
+            restoreHirelings(STORED_HIRELINGS);
+
             function attachListeners() {{
                 document.querySelectorAll('input, textarea').forEach(el => {{
                     if (!el.dataset.saveListenerAttached) {{
@@ -772,6 +1121,14 @@ def generate_character_sheet_html(character: Dict[str, Any], server_mode: bool =
                         el.addEventListener('blur', debouncedSave);
                         el.addEventListener('input', debouncedSave);
                         el.dataset.saveListenerAttached = 'true';
+                    }}
+                }});
+
+                // Also listen on usage markers for click events
+                document.querySelectorAll('.usage-marker').forEach(marker => {{
+                    if (!marker.dataset.saveListenerAttached) {{
+                        marker.addEventListener('click', () => setTimeout(debouncedSave, 100));
+                        marker.dataset.saveListenerAttached = 'true';
                     }}
                 }});
             }}
