@@ -57,11 +57,12 @@ When an attack is **impaired**, such is firing into cover, or fighting while gra
 - [x] Full data persistence on GM -> Player -> GM cycle (conditions, inventory usage, hirelings, slot states)
 
 ### To Do
-1) GM turn tracker / initiative order
-2) GM only notes (per character and session-wide)
-3) GM sharing area - share content with players (maps, letters, etc.)
-4) Set advantages/disadvantages for a player
-5) Run fights / combat tracker
+1) Expose player join details, or make the current copy link work
+2) GM turn tracker / initiative order
+3) GM only notes (per character and session-wide)
+4) GM sharing area - share content with players (maps, letters, etc.)
+5) Set advantages/disadvantages for a player
+6) Run fights / combat tracker
 
 ### Aesthetics
 1) Design a nicer background - suggest coloured banner that GM can select and acts as the colour key for the GM screen
